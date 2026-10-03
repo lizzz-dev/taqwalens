@@ -77,11 +77,6 @@ export function Navbar({
               >
                 <Clock className="w-3.5 h-3.5 text-[#1E3A2F]" />
                 <span>History</span>
-                {historyCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[#1E3A2F] text-white text-[10px] flex items-center justify-center font-bold">
-                    {historyCount}
-                  </span>
-                )}
               </button>
             )}
 
@@ -144,11 +139,6 @@ export function Navbar({
             >
               <Clock className="w-3.5 h-3.5 text-[#1E3A2F]" />
               <span>Recent History</span>
-              {historyCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#1E3A2F] text-white text-[10px] flex items-center justify-center font-bold">
-                  {historyCount}
-                </span>
-              )}
             </button>
           )}
 

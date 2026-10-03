@@ -523,38 +523,8 @@ export default function Home() {
           </div>
 
           {/* RIGHT PANEL: Interactive 3D Packaging & Magnifying TaqwaLens (Cols 7-12) */}
-          <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
+          <div className="lg:col-span-6 flex flex-col justify-center">
             <ProductLens3D />
-
-            {/* Consumer Value Highlights */}
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 text-center text-xs">
-              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
-                  STANDARDS
-                </span>
-                <span className="text-[#1C1917] font-semibold text-xs sm:text-sm">
-                  JAKIM & Codex
-                </span>
-              </div>
-
-              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
-                  ADDITIVES
-                </span>
-                <span className="text-[#1C1917] font-semibold text-xs sm:text-sm">
-                  {indexedCount}+ Verified
-                </span>
-              </div>
-
-              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
-                  ACCURACY
-                </span>
-                <span className="text-[#1E3A2F] font-semibold text-xs sm:text-sm">
-                  Zero Hallucination
-                </span>
-              </div>
-            </div>
           </div>
         </section>
 
