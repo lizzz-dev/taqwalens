@@ -390,7 +390,10 @@ export function Compliance3DShowcase() {
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
-      renderer.dispose();
+      try {
+        renderer.forceContextLoss();
+        renderer.dispose();
+      } catch {}
       disposables.forEach((d) => d.dispose());
     };
   }, []);

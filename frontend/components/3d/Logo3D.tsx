@@ -14,6 +14,8 @@ export function Logo3D({ className = "w-11 h-11 sm:w-12 sm:h-12" }: { className?
     const width = container.clientWidth || 48;
     const height = container.clientHeight || 48;
 
+    container.innerHTML = "";
+
     // 1. Scene & Transparent Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 50);
@@ -22,7 +24,7 @@ export function Logo3D({ className = "w-11 h-11 sm:w-12 sm:h-12" }: { className?
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "default" });
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       container.appendChild(renderer.domElement);
@@ -170,7 +172,10 @@ export function Logo3D({ className = "w-11 h-11 sm:w-12 sm:h-12" }: { className?
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
-      renderer.dispose();
+      try {
+        renderer.forceContextLoss();
+        renderer.dispose();
+      } catch {}
       rimGeo.dispose();
       glassGeo.dispose();
       coreGeo.dispose();

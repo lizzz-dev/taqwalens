@@ -15,6 +15,8 @@ export function ProductLens3D() {
     const width = container.clientWidth || 500;
     const height = container.clientHeight || 450;
 
+    container.innerHTML = "";
+
     // 1. Scene, Camera, Renderer
     const scene = new THREE.Scene();
     scene.background = null; // Transparent background to blend with warm card
@@ -22,12 +24,21 @@ export function ProductLens3D() {
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0.4, width < 480 ? 6.0 : 5.2);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
-    container.appendChild(renderer.domElement);
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "default",
+      });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+      container.appendChild(renderer.domElement);
+    } catch {
+      return;
+    }
 
     // 2. Lighting (Warm Scandinavian Studio Lighting)
     const ambientLight = new THREE.AmbientLight(0xfffdf5, 1.8);
@@ -304,7 +315,10 @@ export function ProductLens3D() {
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
-      renderer.dispose();
+      try {
+        renderer.forceContextLoss();
+        renderer.dispose();
+      } catch {}
       cartonGeo.dispose();
       roofGeo.dispose();
       ringGeo.dispose();
