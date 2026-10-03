@@ -10,16 +10,35 @@ interface ScannerProps {
   onBarcodeScan?: (barcode: string) => void;
   isLoading: boolean;
   statusText?: string;
+  externalPreviewUrl?: string | null;
+  onClearPreview?: () => void;
 }
 
-export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: ScannerProps) {
+export function Scanner({
+  onScan,
+  onBarcodeScan,
+  isLoading,
+  statusText,
+  externalPreviewUrl,
+  onClearPreview,
+}: ScannerProps) {
   const [activeTab, setActiveTab] = useState<"upload" | "camera" | "barcode">("upload");
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(externalPreviewUrl || null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [barcodeError, setBarcodeError] = useState<string | null>(null);
+
+  // Sync externalPreviewUrl if provided
+  useEffect(() => {
+    if (externalPreviewUrl !== undefined) {
+      setPreviewUrl(externalPreviewUrl);
+      if (externalPreviewUrl) {
+        setActiveTab("upload");
+      }
+    }
+  }, [externalPreviewUrl]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -213,38 +232,113 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
         />
 
         {activeTab === "upload" ? (
-          /* Warm Dashed Dropzone */
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative w-full rounded-xl border-2 border-dashed transition-all cursor-pointer p-6 sm:p-10 flex flex-col items-center justify-center text-center ${
-              isDragOver
-                ? "border-[#1E3A2F] bg-[#F0F5F2]"
-                : "border-[#D6D0C4] bg-[#FAF8F5]/80 hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/50"
-            }`}
-          >
-            {previewUrl ? (
-              <div className="space-y-4 w-full flex flex-col items-center">
-                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-xl overflow-hidden border border-[#EAE6DF] shadow-sm bg-white">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewUrl}
-                    alt="Packaging preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-[#1E3A2F]/10 pointer-events-none" />
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-medium text-[#1C1917]">Photo Ready for Audit</p>
-                  <p className="text-[11px] text-[#78716C] mt-0.5">Click to choose another image</p>
-                </div>
+          previewUrl ? (
+            /* High-Tech Optical Inspection Bay with Active Laser Scanline */
+            <div className="relative w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-md min-h-[260px] sm:min-h-[300px] flex items-center justify-center group select-none">
+              {/* Subtle ambient grid pattern */}
+              <div className="absolute inset-0 bg-[radial-gradient(#10b98115_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+              {/* Packaging Image Under Audit */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Product packaging under optical audit"
+                className="w-full h-full max-h-[320px] object-contain p-3 select-none"
+              />
+
+              {/* Holographic Reticle HUD Brackets */}
+              <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-emerald-400 pointer-events-none shadow-[0_0_10px_#10B981]" />
+              <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-emerald-400 pointer-events-none shadow-[0_0_10px_#10B981]" />
+              <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-emerald-400 pointer-events-none shadow-[0_0_10px_#10B981]" />
+              <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-emerald-400 pointer-events-none shadow-[0_0_10px_#10B981]" />
+
+              {/* Top HUD Telemetry Info */}
+              <div className="absolute top-3 inset-x-3.5 flex items-center justify-between pointer-events-none text-[11px] font-mono z-20">
+                <span className="bg-slate-950/85 backdrop-blur-md border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  OPTICAL OCR ACTIVE
+                </span>
+                <span className="bg-slate-950/85 backdrop-blur-md border border-slate-700 text-slate-300 px-2.5 py-1 rounded-md shadow-sm">
+                  TAQWALENS ENGINE
+                </span>
               </div>
-            ) : (
+
+              {/* Active Laser Scanline Animation (when isLoading is true) */}
+              {isLoading && (
+                <>
+                  <motion.div
+                    className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_16px_#10B981,0_0_32px_#10B981] z-20 pointer-events-none"
+                    initial={{ top: "4%" }}
+                    animate={{ top: ["4%", "94%", "4%"] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <div className="absolute inset-x-12 -top-3 h-7 bg-emerald-400/25 blur-md pointer-events-none" />
+                  </motion.div>
+
+                  <div className="absolute inset-0 bg-emerald-500/[0.04] pointer-events-none" />
+
+                  {/* High-Tech Telemetry Status HUD */}
+                  <div className="absolute bottom-3 inset-x-3.5 z-20 flex items-center justify-between gap-2 bg-slate-950/90 backdrop-blur-md border border-emerald-500/50 px-3.5 py-2 rounded-xl text-white shadow-xl">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block tracking-wider">
+                          PROCESSING TELEMETRY
+                        </span>
+                        <span className="text-xs text-slate-100 font-medium block truncate">
+                          {statusText || "Cross-matching additives against certified Fiqh database..."}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md font-semibold shrink-0">
+                      LIVE AUDIT
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {/* Idle Controls (when !isLoading) */}
+              {!isLoading && (
+                <div className="absolute bottom-3 inset-x-3.5 flex items-center justify-between gap-2 z-20">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-sm border border-white/20 text-white text-xs font-medium hover:bg-black/95 transition-all shadow-sm flex items-center gap-1.5"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Change Image</span>
+                  </button>
+                  {onClearPreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewUrl(null);
+                        onClearPreview();
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-sm border border-white/20 text-slate-300 text-xs font-medium hover:text-white hover:bg-black/95 transition-all shadow-sm"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Warm Dashed Dropzone */
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`relative w-full rounded-xl border-2 border-dashed transition-all cursor-pointer p-6 sm:p-10 flex flex-col items-center justify-center text-center ${
+                isDragOver
+                  ? "border-[#1E3A2F] bg-[#F0F5F2]"
+                  : "border-[#D6D0C4] bg-[#FAF8F5]/80 hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/50"
+              }`}
+            >
               <div className="space-y-3.5 max-w-sm">
                 <div className="w-12 h-12 sm:w-13 sm:h-13 mx-auto rounded-full bg-white border border-[#EAE6DF] flex items-center justify-center text-[#1E3A2F] shadow-xs">
                   <PackageCheck className="w-6 h-6 text-[#2D5A46]" />
@@ -265,8 +359,8 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
                   Select Image File
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )
         ) : activeTab === "camera" ? (
           /* Live Camera Viewfinder */
           <div className="relative w-full rounded-xl overflow-hidden bg-[#1C1917] aspect-video flex items-center justify-center border border-[#EAE6DF]">
@@ -412,9 +506,9 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
           </div>
         )}
 
-        {/* Loading Overlay with Warm Ambient Light Sweep */}
+        {/* Fallback Loading Overlay (only when no preview image is active) */}
         <AnimatePresence>
-          {isLoading && (
+          {isLoading && !previewUrl && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

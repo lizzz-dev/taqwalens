@@ -36,6 +36,7 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [scannerPreviewUrl, setScannerPreviewUrl] = useState<string | null>(null);
 
   // User Authentication & 3D Welcome Gateway State
   // ROLLBACK TOGGLE: set ENABLE_AUTH_GATEWAY = false to bypass the gateway anytime
@@ -244,14 +245,6 @@ export default function Home() {
       } else if (result.overall_verdict === "HARAM") {
         soundManager.playHaramTone();
       }
-
-      // Scroll smoothly down to findings
-      setTimeout(() => {
-        const findingsEl = document.getElementById("audit-findings");
-        if (findingsEl) {
-          findingsEl.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 200);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "An unexpected audit error occurred.";
       setErrorMessage(msg);
@@ -285,13 +278,6 @@ export default function Home() {
       } else if (result.overall_verdict === "HARAM") {
         soundManager.playHaramTone();
       }
-
-      setTimeout(() => {
-        const findingsEl = document.getElementById("audit-findings");
-        if (findingsEl) {
-          findingsEl.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 200);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Barcode audit failed.";
       setErrorMessage(msg);
@@ -308,55 +294,97 @@ export default function Home() {
     setStatusText(`Auditing sample ${preset.name}...`);
 
     const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 520;
+    canvas.width = 820;
+    canvas.height = 540;
     const ctx = canvas.getContext("2d");
 
     if (ctx) {
+      // 1. Warm cream packaging card background
       ctx.fillStyle = "#FAF8F5";
-      ctx.fillRect(0, 0, 800, 520);
+      ctx.fillRect(0, 0, 820, 540);
 
-      ctx.strokeStyle = "#EAE6DF";
+      // 2. High-contrast perimeter packaging border
+      const themeColor =
+        preset.verdictType === "HALAL"
+          ? "#1E3A2F"
+          : preset.verdictType === "HARAM"
+          ? "#881337"
+          : "#B45309";
+
+      ctx.strokeStyle = themeColor;
       ctx.lineWidth = 4;
-      ctx.strokeRect(10, 10, 780, 500);
+      ctx.strokeRect(14, 14, 792, 512);
 
-      ctx.fillStyle = "#1E3A2F";
-      ctx.font = "bold 28px serif";
-      ctx.fillText(preset.name.toUpperCase(), 40, 65);
+      // 3. Branded Header Banner
+      ctx.fillStyle = themeColor;
+      ctx.fillRect(18, 18, 784, 85);
 
-      ctx.fillStyle = "#78716C";
-      ctx.font = "14px sans-serif";
-      ctx.fillText(`Brand: ${preset.brand} • Category: ${preset.category}`, 40, 95);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 26px serif";
+      ctx.fillText(preset.name.toUpperCase(), 38, 58);
 
+      ctx.fillStyle = "#EAE6DF";
+      ctx.font = "13px sans-serif";
+      ctx.fillText(`${preset.brand.toUpperCase()} • ${preset.category.toUpperCase()} • EXPORT PACKAGING`, 38, 85);
+
+      // 4. Ingredients Panel Header
       ctx.fillStyle = "#1C1917";
       ctx.font = "bold 16px sans-serif";
-      ctx.fillText("INGREDIENTS DECLARATION:", 40, 140);
+      ctx.fillText("INGREDIENTS DECLARATION / INGRÉDIENTS:", 38, 138);
 
+      // 5. High-contrast ingredient declaration body
       ctx.font = "14px sans-serif";
       ctx.fillStyle = "#292524";
 
       const words = preset.ingredientsText.split(" ");
       let line = "";
-      let y = 170;
+      let y = 168;
       for (const word of words) {
         const testLine = line + word + " ";
         const metrics = ctx.measureText(testLine);
-        if (metrics.width > 700) {
-          ctx.fillText(line, 40, y);
+        if (metrics.width > 730) {
+          ctx.fillText(line, 38, y);
           line = word + " ";
           y += 24;
         } else {
           line = testLine;
         }
       }
-      ctx.fillText(line, 40, y);
+      ctx.fillText(line, 38, y);
 
+      // 6. Official Stamp or Warning Badge
       if (preset.verdictType === "HALAL") {
         ctx.fillStyle = "#059669";
-        ctx.font = "bold 16px sans-serif";
-        ctx.fillText("CERTIFIED HALAL • JAKIM / MUI ACCREDITED", 40, 480);
+        ctx.fillRect(38, 460, 360, 36);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("✓ JAKIM & MUI CERTIFIED HALAL • MS 1500:2019", 54, 483);
+      } else if (preset.verdictType === "HARAM") {
+        ctx.fillStyle = "#DC2626";
+        ctx.fillRect(38, 460, 380, 36);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("✕ NON-HALAL • CONTAINS PORCINE GELATIN (E441)", 54, 483);
+      } else {
+        ctx.fillStyle = "#D97706";
+        ctx.fillRect(38, 460, 360, 36);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("⚠ MUSHBOOH • UNVERIFIED ANIMAL / INSECT DERIVATIVES", 54, 483);
       }
+
+      // 7. Simulated Optical Barcode lines
+      ctx.fillStyle = "#1C1917";
+      for (let i = 0; i < 35; i++) {
+        const w = (i % 3 === 0) ? 3.5 : 2;
+        ctx.fillRect(560 + i * 4, 445, w, 40);
+      }
+      ctx.font = "11px monospace";
+      ctx.fillText("5 012345 678901", 570, 500);
     }
+
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+    setScannerPreviewUrl(dataUrl);
 
     canvas.toBlob(
       async (blob) => {
@@ -474,16 +502,11 @@ export default function Home() {
         return;
       }
       try {
+        setScannerPreviewUrl(canvas.toDataURL("image/jpeg", 0.92));
         setStatusText("Reading packaging label...");
         const result = await auditProductImage(blob, `${presetType}_sample.jpg`, selectedMadhhab);
         setAuditResult(result);
         persistAuditToHistory(result, "preset");
-        setTimeout(() => {
-          const findingsEl = document.getElementById("audit-findings");
-          if (findingsEl) {
-            findingsEl.scrollIntoView({ behavior: "smooth" });
-          }
-        }, 200);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to run audit preset.";
         setErrorMessage(msg);
@@ -539,13 +562,14 @@ export default function Home() {
         )}
 
         {/* ------------------------------------------------------------- */}
-        {/* WARM DUAL-PANEL PRODUCT STUDIO                                */}
+        {/* BALANCED SIDE-BY-SIDE INTERACTIVE PRODUCT STUDIO              */}
         {/* ------------------------------------------------------------- */}
-        <section className="pt-6 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* LEFT PANEL: Editorial Typography + Scanner Bay + Test Presets (Cols 1-6) */}
-          <div className="lg:col-span-6 flex flex-col items-start">
+        <section className="pt-6 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* LEFT COLUMN (Desktop col-span-7 / col-span-6):
+              Primary Interactive Terminal: Badge, Headline, Scanner Bay, and Live Audit Results */}
+          <div className="lg:col-span-7 flex flex-col items-start space-y-6 w-full">
             {/* Mindful Badge */}
-            <div className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 mb-5 shadow-2xs">
+            <div className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
               <span>Certified Islamic Dietary Standards</span>
             </div>
@@ -557,98 +581,116 @@ export default function Home() {
                 Verify Sourcing. <br />
                 <span className="text-[#1E3A2F]">Eat with Certainty.</span>
               </h1>
-              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mt-4 mb-8">
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mt-4 mb-2">
                 Photograph any snack, beverage, or grocery label—or look up barcodes directly—to instantly detect hidden animal derivatives, E-codes, allergens, and verified Halal standards.
               </p>
             </div>
 
-            {/* Inviting Package Scanner Card with Image & Barcode support */}
-            <div className="mt-8 space-y-6 w-full">
+            {/* Primary Interactive Terminal: Package & Barcode Scanner */}
+            <div className="w-full">
               <Scanner
-                onScan={handleScan}
-                onBarcodeScan={handleBarcodeScan}
+                onScan={(file) => {
+                  setSelectedPresetId(null);
+                  handleScan(file);
+                }}
+                onBarcodeScan={(code) => {
+                  setSelectedPresetId(null);
+                  handleBarcodeScan(code);
+                }}
                 isLoading={isLoading}
                 statusText={statusText}
+                externalPreviewUrl={scannerPreviewUrl}
+                onClearPreview={() => {
+                  setScannerPreviewUrl(null);
+                  setSelectedPresetId(null);
+                }}
               />
+            </div>
 
-              {/* 1-Click Interactive Test Lab Presets Tray */}
+            {/* LIVE AUDIT FINDINGS DOSSIER (Displays cleanly right here on the Left Side) */}
+            {auditResult && (
+              <div id="audit-findings" className="w-full space-y-6 pt-4 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#1C1917]">
+                      Compliance Audit Dossier
+                    </h3>
+                    <p className="text-xs text-[#78716C]">
+                      Optical evaluation and juristic additive matching completed under {auditResult.madhhab_profile || selectedMadhhab} school.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleOpenCertificateInNewTab(auditResult)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95 min-h-[36px]"
+                      title="Open official compliance certificate in a separate browser tab"
+                    >
+                      <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>Certificate ↗</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setAuditResult(null);
+                        setScannerPreviewUrl(null);
+                        setSelectedPresetId(null);
+                      }}
+                      className="text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] shadow-2xs transition-colors min-h-[36px]"
+                    >
+                      Scan Another Item
+                    </button>
+                  </div>
+                </div>
+
+                {/* High-Impact 3D Tilt Verdict Card */}
+                <VerdictCard
+                  audit={auditResult}
+                  onOpenCertificate={() => handleOpenCertificateInNewTab(auditResult)}
+                />
+
+                {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}
+                {(auditResult.overall_verdict === "MUSHBOOH" || auditResult.flagged_items.length > 0) && (
+                  <InquiryDrawer audit={auditResult} />
+                )}
+
+                {/* Ask Sheikh AI Interactive Juristic Assistant */}
+                <AskSheikhAI
+                  productName={auditResult.product_name || "Food Item"}
+                  verdict={auditResult.overall_verdict}
+                  additives={auditResult.flagged_items.map((item) => ({
+                    code: item.additive_detail?.code || item.name,
+                    name: item.name,
+                    halal_status: item.status,
+                  }))}
+                  madhhab={selectedMadhhab}
+                />
+
+                {/* Detailed Ingredient Breakdown Grid */}
+                <IngredientGrid ingredients={auditResult.ingredients} />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN (Desktop col-span-5 / col-span-6):
+              TOP: Fixed-height 3D Spline/Three.js Packaging Model (unchanged, not shrunk)
+              BOTTOM: Instant Test Lab Presets (1-Click Demo) directly beneath */}
+          <div className="lg:col-span-5 flex flex-col space-y-6 w-full lg:sticky lg:top-20">
+            {/* TOP: Fixed-Height 3D Packaging Model */}
+            <div className="w-full">
+              <ProductLens3D />
+            </div>
+
+            {/* BOTTOM: Instant Test Lab Presets (1-Click Demo) in the empty space directly beneath 3D model */}
+            <div className="w-full">
               <DemoPresetsTray
                 onSelectPreset={handleSelectDemoPreset}
                 selectedPresetId={selectedPresetId}
+                isLoading={isLoading}
               />
             </div>
           </div>
-
-          {/* RIGHT PANEL: Interactive 3D Packaging & Magnifying TaqwaLens (Cols 7-12) */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <ProductLens3D />
-          </div>
         </section>
-
-        {/* ------------------------------------------------------------- */}
-        {/* AUDIT FINDINGS DOSSIER (Visible after audit completion)        */}
-        {/* ------------------------------------------------------------- */}
-        {auditResult && (
-          <section id="audit-findings" className="max-w-7xl mx-auto px-6 space-y-8 pt-8 sm:pt-10 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-serif font-bold text-2xl text-[#1C1917]">
-                  Compliance Audit Dossier
-                </h3>
-                <p className="text-xs text-[#78716C]">
-                  Optical evaluation and juristic additive matching completed under {auditResult.madhhab_profile || selectedMadhhab} school.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => handleOpenCertificateInNewTab(auditResult)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95 min-h-[38px]"
-                  title="Open official compliance certificate in a separate browser tab"
-                >
-                  <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>View Certificate Dossier ↗</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setAuditResult(null);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] shadow-2xs transition-colors min-h-[38px]"
-                >
-                  Scan Another Item
-                </button>
-              </div>
-            </div>
-
-            {/* High-Impact 3D Tilt Verdict Card */}
-            <VerdictCard
-              audit={auditResult}
-              onOpenCertificate={() => handleOpenCertificateInNewTab(auditResult)}
-            />
-
-            {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}
-            {(auditResult.overall_verdict === "MUSHBOOH" || auditResult.flagged_items.length > 0) && (
-              <InquiryDrawer audit={auditResult} />
-            )}
-
-            {/* Ask Sheikh AI Interactive Juristic Assistant */}
-            <AskSheikhAI
-              productName={auditResult.product_name || "Food Item"}
-              verdict={auditResult.overall_verdict}
-              additives={auditResult.flagged_items.map((item) => ({
-                code: item.additive_detail?.code || item.name,
-                name: item.name,
-                halal_status: item.status,
-              }))}
-              madhhab={selectedMadhhab}
-            />
-
-            {/* Detailed Ingredient Breakdown Grid */}
-            <IngredientGrid ingredients={auditResult.ingredients} />
-          </section>
-        )}
 
         {/* Authoritative Educational Notice */}
         <div className="max-w-7xl mx-auto px-6 pb-12">

@@ -82,39 +82,41 @@ export const DEMO_PRESETS: DemoPreset[] = [
 interface DemoPresetsTrayProps {
   onSelectPreset: (preset: DemoPreset) => void;
   selectedPresetId?: string | null;
+  isLoading?: boolean;
 }
 
-export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPresetsTrayProps) {
+export function DemoPresetsTray({ onSelectPreset, selectedPresetId, isLoading }: DemoPresetsTrayProps) {
   const handleSelect = (p: DemoPreset) => {
     soundManager.playClick();
     onSelectPreset(p);
   };
 
   return (
-    <div className="w-full bg-[#FAF8F5] border border-[#EAE6DF] rounded-2xl p-3 sm:p-4 shadow-2xs">
-      <div className="flex items-center justify-between gap-2 mb-2.5">
+    <div className="w-full bg-[#FAF8F5] border border-[#EAE6DF] rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+      <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#1E3A2F] text-[#D4AF37] flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg bg-[#1E3A2F] text-[#D4AF37] flex items-center justify-center shrink-0">
             <Zap className="w-3.5 h-3.5 fill-[#D4AF37]" />
           </div>
           <div>
             <h4 className="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
               <span>Instant Test Lab Presets</span>
-              <span className="text-[10px] font-normal text-[#78716C] bg-white border border-[#EAE6DF] px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-normal text-[#1E3A2F] bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded-full">
                 1-Click Demo
               </span>
             </h4>
             <p className="text-[11px] text-[#78716C] hidden sm:block">
-              Select any real-world sample product to audit without needing physical packaging.
+              Select any real-world sample product to audit without physical packaging.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Preset Pills Tray */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {DEMO_PRESETS.map((preset) => {
+      {/* Preset Pills Grid: Elegant 2-Column / Responsive Layout */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2.5">
+        {DEMO_PRESETS.map((preset, index) => {
           const isSelected = selectedPresetId === preset.id;
+          const isLast = index === DEMO_PRESETS.length - 1; // 5th item
           const badgeColor =
             preset.verdictType === "HALAL"
               ? "bg-[#059669]/10 text-[#059669] border-[#059669]/30"
@@ -126,16 +128,19 @@ export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPreset
             <button
               key={preset.id}
               onClick={() => handleSelect(preset)}
-              className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between group active:scale-95 ${
+              disabled={isLoading && isSelected}
+              className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between group active:scale-95 ${
+                isLast ? "col-span-2 sm:col-span-1 lg:col-span-2" : ""
+              } ${
                 isSelected
-                  ? "bg-white border-[#1E3A2F] shadow-sm ring-1 ring-[#1E3A2F]"
+                  ? "bg-white border-[#1E3A2F] shadow-sm ring-2 ring-[#1E3A2F]/80"
                   : "bg-white border-[#EAE6DF] hover:border-[#1E3A2F]/40 hover:bg-[#FAF8F5]"
               }`}
               title={preset.description}
             >
               <div>
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-base sm:text-lg">{preset.icon}</span>
+                <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <span className="text-lg">{preset.icon}</span>
                   <span
                     className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border tracking-tight ${badgeColor}`}
                   >
@@ -148,11 +153,18 @@ export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPreset
                 <div className="text-[10px] text-[#78716C] truncate mt-0.5">{preset.brand}</div>
               </div>
 
-              <div className="mt-2 pt-1.5 border-t border-[#EAE6DF]/60 flex items-center justify-between text-[10px] text-[#1E3A2F] font-medium">
-                <span className="truncate text-[#78716C] text-[9px]">{preset.verdictLabel}</span>
-                <span className="group-hover:translate-x-0.5 transition-transform text-[#1E3A2F] font-bold">
-                  Audit →
-                </span>
+              <div className="mt-2.5 pt-1.5 border-t border-[#EAE6DF]/60 flex items-center justify-between text-[10px] text-[#1E3A2F] font-medium">
+                <span className="truncate text-[#78716C] text-[9px] max-w-[110px]">{preset.verdictLabel}</span>
+                {isSelected && isLoading ? (
+                  <span className="flex items-center gap-1 text-[10px] text-[#1E3A2F] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1E3A2F] animate-ping" />
+                    Scanning
+                  </span>
+                ) : (
+                  <span className="group-hover:translate-x-0.5 transition-transform text-[#1E3A2F] font-bold">
+                    Audit →
+                  </span>
+                )}
               </div>
             </button>
           );
