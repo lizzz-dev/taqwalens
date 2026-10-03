@@ -8,9 +8,11 @@ import { VerdictCard } from "../components/VerdictCard";
 import { IngredientGrid } from "../components/IngredientGrid";
 import { InquiryDrawer } from "../components/InquiryDrawer";
 import { Disclaimer } from "../components/Disclaimer";
-import { auditProductImage, checkBackendHealth } from "../lib/api";
-import { AuditResponse } from "../lib/types";
-import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert } from "lucide-react";
+import { HistoryDrawer } from "../components/HistoryDrawer";
+import { PrintCertificateModal } from "../components/PrintCertificateModal";
+import { auditProductImage, auditProductBarcode, checkBackendHealth } from "../lib/api";
+import { AuditResponse, HistoryItem, MadhhabProfile } from "../lib/types";
+import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert, Award, Barcode } from "lucide-react";
 
 export default function Home() {
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
@@ -19,6 +21,24 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBackendHealthy, setIsBackendHealthy] = useState<boolean>(true);
   const [indexedCount, setIndexedCount] = useState<number>(372);
+
+  // New Enterprise Features State
+  const [selectedMadhhab, setSelectedMadhhab] = useState<MadhhabProfile>("standard");
+  const [recentScans, setRecentScans] = useState<HistoryItem[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [isCertificateOpen, setIsCertificateOpen] = useState<boolean>(false);
+
+  // Load scan history from localStorage on client mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("taqwalens_recent_scans");
+      if (stored) {
+        setRecentScans(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.warn("Could not read recent scans from localStorage:", err);
+    }
+  }, []);
 
   // Check backend health on mount
   useEffect(() => {
@@ -35,6 +55,54 @@ export default function Home() {
       });
   }, []);
 
+  // Helper to persist audits into browser history
+  const persistAuditToHistory = (
+    audit: AuditResponse,
+    inputType: "image" | "barcode" | "preset",
+    barcode?: string
+  ) => {
+    const newItem: HistoryItem = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: Date.now(),
+      audit,
+      inputType,
+      barcode,
+    };
+
+    setRecentScans((prev) => {
+      // Deduplicate by product name
+      const filtered = prev.filter((item) => item.audit.product_name !== audit.product_name);
+      const updated = [newItem, ...filtered].slice(0, 25);
+      try {
+        localStorage.setItem("taqwalens_recent_scans", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("Could not persist recent scans to localStorage:", err);
+      }
+      return updated;
+    });
+  };
+
+  const handleClearHistory = () => {
+    setRecentScans([]);
+    try {
+      localStorage.removeItem("taqwalens_recent_scans");
+    } catch (err) {
+      console.warn("Failed to clear localStorage history:", err);
+    }
+  };
+
+  const handleDeleteHistoryItem = (id: string) => {
+    setRecentScans((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      try {
+        localStorage.setItem("taqwalens_recent_scans", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("Failed to update localStorage history:", err);
+      }
+      return updated;
+    });
+  };
+
   const handleScan = async (file: File | Blob) => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -49,8 +117,9 @@ export default function Home() {
         setStatusText("Cross-matching additives against certified Fiqh database...");
       }, 1200);
 
-      const result = await auditProductImage(file);
+      const result = await auditProductImage(file, "package.jpg", selectedMadhhab);
       setAuditResult(result);
+      persistAuditToHistory(result, "image");
 
       // Scroll smoothly down to findings
       setTimeout(() => {
@@ -61,6 +130,38 @@ export default function Home() {
       }, 200);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "An unexpected audit error occurred.";
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBarcodeScan = async (barcode: string) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setStatusText(`Querying global food registry for barcode ${barcode}...`);
+
+    try {
+      setTimeout(() => {
+        setStatusText("Resolving ingredient declaration and additive codes...");
+      }, 600);
+
+      setTimeout(() => {
+        setStatusText(`Executing Fiqh evaluation under ${selectedMadhhab} profile...`);
+      }, 1200);
+
+      const result = await auditProductBarcode(barcode, selectedMadhhab);
+      setAuditResult(result);
+      persistAuditToHistory(result, "barcode", barcode);
+
+      setTimeout(() => {
+        const findingsEl = document.getElementById("audit-findings");
+        if (findingsEl) {
+          findingsEl.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 200);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Barcode audit failed.";
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
@@ -173,8 +274,9 @@ export default function Home() {
       }
       try {
         setStatusText("Reading packaging label...");
-        const result = await auditProductImage(blob, `${presetType}_sample.jpg`);
+        const result = await auditProductImage(blob, `${presetType}_sample.jpg`, selectedMadhhab);
         setAuditResult(result);
+        persistAuditToHistory(result, "preset");
         setTimeout(() => {
           const findingsEl = document.getElementById("audit-findings");
           if (findingsEl) {
@@ -191,11 +293,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917] flex flex-col relative">
-      {/* Editorial Navbar */}
-      <Navbar isBackendHealthy={isBackendHealthy} indexedCount={indexedCount} />
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917] flex flex-col relative overflow-x-hidden">
+      {/* Editorial Navbar with Madhhab Profile Selector & History Drawer Trigger */}
+      <Navbar
+        isBackendHealthy={isBackendHealthy}
+        indexedCount={indexedCount}
+        historyCount={recentScans.length}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        selectedMadhhab={selectedMadhhab}
+        onChangeMadhhab={(m) => setSelectedMadhhab(m)}
+      />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
         {/* Error Notification Toast */}
         {errorMessage && (
           <div className="p-4 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] text-xs flex items-start justify-between gap-3 animate-in fade-in slide-in-from-top-2 shadow-sm">
@@ -217,7 +326,7 @@ export default function Home() {
         {/* ------------------------------------------------------------- */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* LEFT PANEL: Editorial Typography + Scanner Bay + Test Presets (Cols 1-6) */}
-          <div className="lg:col-span-6 space-y-7">
+          <div className="lg:col-span-6 space-y-6 sm:space-y-7">
             {/* Mindful Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F0F5F2] border border-[#CBE0D4] text-xs text-[#1E3A2F] font-medium shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-[#2D5A46]" />
@@ -232,12 +341,17 @@ export default function Home() {
                 <span className="text-[#1E3A2F]">Eat with Certainty.</span>
               </h1>
               <p className="text-sm sm:text-base text-[#78716C] leading-relaxed font-normal max-w-xl">
-                Photograph any snack, beverage, or imported grocery label to instantly detect hidden animal derivatives, E-codes, and verified Halal standards.
+                Photograph any snack, beverage, or grocery label—or look up barcodes directly—to instantly detect hidden animal derivatives, E-codes, allergens, and verified Halal standards.
               </p>
             </div>
 
-            {/* Inviting Package Scanner Card */}
-            <Scanner onScan={handleScan} isLoading={isLoading} statusText={statusText} />
+            {/* Inviting Package Scanner Card with Image & Barcode support */}
+            <Scanner
+              onScan={handleScan}
+              onBarcodeScan={handleBarcodeScan}
+              isLoading={isLoading}
+              statusText={statusText}
+            />
 
             {/* Warm Real-World Example Chips */}
             <div className="p-4 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs space-y-3">
@@ -251,7 +365,7 @@ export default function Home() {
               <div className="flex flex-wrap gap-2 text-xs">
                 <button
                   onClick={() => handleLoadDemoPreset("mushbooh")}
-                  className="px-3.5 py-2 rounded-full border border-[#F5DEB3] bg-[#FCF7ED] text-[#B45309] hover:bg-[#FDF3DE] hover:border-[#E9C77B] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95"
+                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#F5DEB3] bg-[#FCF7ED] text-[#B45309] hover:bg-[#FDF3DE] hover:border-[#E9C77B] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
                 >
                   <span>British Biscuit (E471)</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
@@ -259,7 +373,7 @@ export default function Home() {
 
                 <button
                   onClick={() => handleLoadDemoPreset("haram")}
-                  className="px-3.5 py-2 rounded-full border border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FEE2E2] hover:border-[#FCA5A5] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95"
+                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FEE2E2] hover:border-[#FCA5A5] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
                 >
                   <span>Gummy Candy (E120)</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
@@ -267,7 +381,7 @@ export default function Home() {
 
                 <button
                   onClick={() => handleLoadDemoPreset("halal")}
-                  className="px-3.5 py-2 rounded-full border border-[#CBE0D4] bg-[#F0F5F2] text-[#1E3A2F] hover:bg-[#E3EFE8] hover:border-[#A3CCB3] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95"
+                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#CBE0D4] bg-[#F0F5F2] text-[#1E3A2F] hover:bg-[#E3EFE8] hover:border-[#A3CCB3] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
                 >
                   <span>Imported Noodles (Halal)</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
@@ -275,7 +389,7 @@ export default function Home() {
 
                 <button
                   onClick={() => handleLoadDemoPreset("invalid")}
-                  className="px-3.5 py-2 rounded-full border border-[#EAE6DF] bg-[#FAF8F5] text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] hover:border-[#D6D0C4] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95"
+                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#EAE6DF] bg-[#FAF8F5] text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] hover:border-[#D6D0C4] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
                   title="Verify anti-hallucination rejection on non-food image"
                 >
                   <ShieldAlert className="w-3.5 h-3.5 text-[#C28E38]" />
@@ -290,9 +404,9 @@ export default function Home() {
             <ProductLens3D />
 
             {/* Consumer Value Highlights */}
-            <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[10px] uppercase font-medium tracking-wider mb-0.5">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 text-center text-xs">
+              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
+                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
                   STANDARDS
                 </span>
                 <span className="text-[#1C1917] font-semibold text-xs sm:text-sm">
@@ -300,8 +414,8 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[10px] uppercase font-medium tracking-wider mb-0.5">
+              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
+                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
                   ADDITIVES
                 </span>
                 <span className="text-[#1C1917] font-semibold text-xs sm:text-sm">
@@ -309,8 +423,8 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
-                <span className="text-[#A8A29E] block text-[10px] uppercase font-medium tracking-wider mb-0.5">
+              <div className="p-3 sm:p-3.5 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs">
+                <span className="text-[#A8A29E] block text-[9px] sm:text-[10px] uppercase font-medium tracking-wider mb-0.5">
                   ACCURACY
                 </span>
                 <span className="text-[#1E3A2F] font-semibold text-xs sm:text-sm">
@@ -325,30 +439,43 @@ export default function Home() {
         {/* AUDIT FINDINGS DOSSIER (Visible after audit completion)        */}
         {/* ------------------------------------------------------------- */}
         {auditResult && (
-          <section id="audit-findings" className="space-y-8 pt-10 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <section id="audit-findings" className="space-y-8 pt-8 sm:pt-10 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-serif font-bold text-2xl text-[#1C1917]">
                   Compliance Audit Dossier
                 </h3>
                 <p className="text-xs text-[#78716C]">
-                  Optical evaluation and juristic additive matching completed.
+                  Optical evaluation and juristic additive matching completed under {auditResult.madhhab_profile || selectedMadhhab} school.
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  setAuditResult(null);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="self-start sm:self-auto text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] shadow-2xs transition-colors"
-              >
-                Scan Another Item
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsCertificateOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95 min-h-[38px]"
+                >
+                  <Award className="w-3.5 h-3.5 text-[#CBE0D4]" />
+                  <span>View Certificate Dossier</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setAuditResult(null);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] shadow-2xs transition-colors min-h-[38px]"
+                >
+                  Scan Another Item
+                </button>
+              </div>
             </div>
 
             {/* High-Impact 3D Tilt Verdict Card */}
-            <VerdictCard audit={auditResult} />
+            <VerdictCard
+              audit={auditResult}
+              onOpenCertificate={() => setIsCertificateOpen(true)}
+            />
 
             {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}
             {(auditResult.overall_verdict === "MUSHBOOH" || auditResult.flagged_items.length > 0) && (
@@ -363,6 +490,33 @@ export default function Home() {
         {/* Authoritative Educational Notice */}
         <Disclaimer />
       </main>
+
+      {/* Slide-over / Bottom-sheet Recent Scans History Drawer */}
+      <HistoryDrawer
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        history={recentScans}
+        onSelectAudit={(audit) => {
+          setAuditResult(audit);
+          setTimeout(() => {
+            const findingsEl = document.getElementById("audit-findings");
+            if (findingsEl) {
+              findingsEl.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 200);
+        }}
+        onClearHistory={handleClearHistory}
+        onDeleteItem={handleDeleteHistoryItem}
+      />
+
+      {/* Exportable PDF / Print Compliance Certificate Modal */}
+      {auditResult && (
+        <PrintCertificateModal
+          isOpen={isCertificateOpen}
+          onClose={() => setIsCertificateOpen(false)}
+          audit={auditResult}
+        />
+      )}
     </div>
   );
 }

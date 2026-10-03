@@ -1,4 +1,4 @@
-import { AuditResponse } from "./types";
+import { AuditResponse, MadhhabProfile } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -49,7 +49,11 @@ export async function compressImage(file: File, maxDim: number = 1024): Promise<
 /**
  * Submits packaging image to the backend compliance audit API.
  */
-export async function auditProductImage(imageFile: File | Blob, filename: string = "package.jpg"): Promise<AuditResponse> {
+export async function auditProductImage(
+  imageFile: File | Blob,
+  filename: string = "package.jpg",
+  madhhab: MadhhabProfile = "standard"
+): Promise<AuditResponse> {
   if (imageFile.size > MAX_FILE_SIZE) {
     throw new Error("File size exceeds the 10MB limit. Please provide a smaller image.");
   }
@@ -66,6 +70,7 @@ export async function auditProductImage(imageFile: File | Blob, filename: string
 
   const formData = new FormData();
   formData.append("file", uploadBlob, filename);
+  formData.append("madhhab", madhhab);
 
   const response = await fetch(`${API_BASE_URL}/api/audit`, {
     method: "POST",
@@ -87,9 +92,43 @@ export async function auditProductImage(imageFile: File | Blob, filename: string
 }
 
 /**
+ * Direct barcode lookup fallback against OpenFoodFacts API + Fiqh engine.
+ */
+export async function auditProductBarcode(
+  barcode: string,
+  madhhab: MadhhabProfile = "standard"
+): Promise<AuditResponse> {
+  const cleanBarcode = barcode.trim().replace(/[-\s]/g, "");
+  if (!cleanBarcode || !/^\d{6,14}$/.test(cleanBarcode)) {
+    throw new Error("Invalid barcode format. Please enter a 6 to 14 digit numeric UPC or EAN code.");
+  }
+
+  const url = `${API_BASE_URL}/api/barcode/${encodeURIComponent(cleanBarcode)}?madhhab=${encodeURIComponent(madhhab)}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    let errorDetail = "Barcode lookup failed.";
+    try {
+      const errorJson = await response.json();
+      errorDetail = errorJson.detail || errorJson.error || errorDetail;
+    } catch {
+      errorDetail = `Server returned HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorDetail);
+  }
+
+  return response.json();
+}
+
+/**
  * Checks backend health and connectivity.
  */
-export async function checkBackendHealth(): Promise<{ status: string; groq_configured: boolean; gemini_configured: boolean; total_additives_indexed: number }> {
+export async function checkBackendHealth(): Promise<{
+  status: string;
+  groq_configured: boolean;
+  gemini_configured: boolean;
+  total_additives_indexed: number;
+}> {
   const response = await fetch(`${API_BASE_URL}/health`);
   if (!response.ok) {
     throw new Error(`Health check failed with status: ${response.status}`);

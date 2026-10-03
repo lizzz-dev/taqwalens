@@ -20,13 +20,13 @@ export function ProductLens3D() {
     scene.background = null; // Transparent background to blend with warm card
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.4, 5.2);
+    camera.position.set(0, 0.4, width < 480 ? 6.0 : 5.2);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     container.appendChild(renderer.domElement);
 
     // 2. Lighting (Warm Scandinavian Studio Lighting)
@@ -250,12 +250,12 @@ export function ProductLens3D() {
 
     // 6. Animation Loop
     let animId: number;
-    let clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
-      const elapsedTime = clock.getElapsedTime();
+      const elapsedTime = (performance.now() - startTime) * 0.001;
 
       // Smooth damping on mouse movement
       targetX += (mouseX - targetX) * 0.05;
@@ -287,6 +287,7 @@ export function ProductLens3D() {
         const { width: newW, height: newH } = entry.contentRect;
         if (newW > 0 && newH > 0) {
           camera.aspect = newW / newH;
+          camera.position.z = newW < 480 ? 6.0 : 5.2;
           camera.updateProjectionMatrix();
           renderer.setSize(newW, newH);
         }
@@ -316,21 +317,21 @@ export function ProductLens3D() {
   }, []);
 
   return (
-    <div className="relative w-full h-[380px] sm:h-[440px] rounded-2xl bg-gradient-to-b from-[#F7F4EE] to-[#EFECE4] border border-[#EAE6DF] overflow-hidden flex items-center justify-center shadow-sm">
+    <div className="relative w-full h-[280px] sm:h-[360px] lg:h-[440px] rounded-2xl bg-gradient-to-b from-[#F7F4EE] to-[#EFECE4] border border-[#EAE6DF] overflow-hidden flex items-center justify-center shadow-sm touch-pan-y">
       {/* Subtle ambient lens flare / glow behind carton */}
       <div className="absolute w-72 h-72 rounded-full bg-[#1E3A2F]/5 blur-3xl pointer-events-none" />
 
       {/* 3D Canvas Mount */}
-      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing touch-pan-y" />
 
       {/* Aesthetic Overlay Badge */}
-      <div className="absolute top-4 left-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#EAE6DF] text-xs text-[#1E3A2F] backdrop-blur-md shadow-xs">
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/85 border border-[#EAE6DF] text-[11px] sm:text-xs text-[#1E3A2F] backdrop-blur-md shadow-2xs">
         <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
         <span className="font-medium tracking-tight">Interactive 3D Inspector</span>
       </div>
 
-      <div className="absolute bottom-4 right-4 text-[11px] text-[#78716C] bg-white/70 px-2.5 py-1 rounded-md border border-[#EAE6DF]/70 backdrop-blur-sm pointer-events-none">
-        Hover & move to inspect package
+      <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 text-[10px] sm:text-[11px] text-[#78716C] bg-white/75 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-[#EAE6DF]/70 backdrop-blur-sm pointer-events-none">
+        Hover / drag to rotate
       </div>
     </div>
   );

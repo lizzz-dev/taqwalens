@@ -77,3 +77,6 @@ class AuditResponse(BaseModel):
         description="Non-fatwa educational disclaimer"
     )
     metadata: AuditMetadata = Field(description="Telemetry and engine provenance")
+    madhhab_profile: Optional[str] = Field(default="standard", description="Applied juristic school profile (standard, hanafi, shafii, strict)")
+    dietary_tags: List[str] = Field(default_factory=list, description="Dietary compatibility tags (e.g. 'Vegan Suitable', 'Vegetarian')")
+    allergens_detected: List[str] = Field(default_factory=list, description="Common food allergens detected (e.g. 'Wheat (Gluten)', 'Milk')")

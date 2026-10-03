@@ -2,6 +2,8 @@ export type VerdictStatus = 'HALAL' | 'HARAM' | 'MUSHBOOH' | 'NEEDS_REVIEW';
 
 export type IngredientSource = 'plant' | 'animal' | 'synthetic' | 'mineral' | 'microbial' | 'unknown';
 
+export type MadhhabProfile = 'standard' | 'hanafi' | 'shafii' | 'strict';
+
 export interface AdditiveDetail {
   code: string;
   name: string;
@@ -57,4 +59,15 @@ export interface AuditResponse {
   inquiry_details?: InquiryDrafts;
   disclaimer: string;
   metadata: AuditMetadata;
+  madhhab_profile?: string;
+  dietary_tags?: string[];
+  allergens_detected?: string[];
+}
+
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  audit: AuditResponse;
+  inputType: 'image' | 'barcode' | 'preset';
+  barcode?: string;
 }

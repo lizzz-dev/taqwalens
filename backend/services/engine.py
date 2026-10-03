@@ -40,13 +40,16 @@ def _map_origin_to_source(origins: List[str]) -> IngredientSource:
     return IngredientSource.UNKNOWN
 
 
-def _classify_ingredient(raw_text: str) -> IngredientItem:
-    """Classify an individual ingredient string using the additives knowledge base."""
+def _classify_ingredient(raw_text: str, madhhab: str = "standard") -> IngredientItem:
+    """Classify an individual ingredient string using the additives knowledge base and juristic profile."""
     raw_clean = raw_text.strip()
     match = lookup_additive(raw_clean)
 
     if match:
         status_str = match.get("status", "Mushbooh").upper()
+        name_upper = match.get("name", "").upper()
+        code_upper = match.get("code", "").upper()
+
         if "HARAM" in status_str:
             status = VerdictStatus.HARAM
             is_flagged = True
@@ -56,6 +59,32 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
         else:
             status = VerdictStatus.MUSHBOOH
             is_flagged = True
+
+        reason = match.get("concern", "")
+
+        # Multi-Madhhab Juristic Adjustments
+        m = (madhhab or "standard").lower()
+        if m == "hanafi":
+            # Carmine E120: Strictly Haram in Hanafi Fiqh (prohibits all land insects except locusts)
+            if "E120" in code_upper or "CARMINE" in name_upper or "COCHINEAL" in name_upper:
+                status = VerdictStatus.HARAM
+                is_flagged = True
+                reason += " [Hanafi Jurisprudence: Strictly prohibited due to consumption of non-locust land insects]."
+            # Bovine microbial/animal rennet permitted by classical Hanafi scholars if not from swine
+            elif "RENNET" in name_upper and "PORK" not in name_upper and "SWINE" not in name_upper:
+                status = VerdictStatus.HALAL
+                is_flagged = False
+                reason += " [Hanafi Jurisprudence: Permitted under classical ruling of Imam Abu Hanifa for non-porcine animal rennet]."
+        elif m == "shafii":
+            # Shafi'i Fiqh requires verified Dhabihah slaughter for all animal enzymes
+            if "RENNET" in name_upper or "PEPSIN" in name_upper:
+                status = VerdictStatus.MUSHBOOH
+                is_flagged = True
+                reason += " [Shafi'i Jurisprudence: Requires verified Dhabihah Islamic slaughter proof for bovine rennet/pepsin]."
+        elif m == "strict":
+            if status == VerdictStatus.MUSHBOOH:
+                is_flagged = True
+                reason += " [Strict Profile: Flagged for mandatory producer inquiry]."
 
         origins = match.get("origins", [])
         source = _map_origin_to_source(origins)
@@ -67,7 +96,7 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
             status=status,
             source=source,
             description=match.get("concern", "Standard food additive."),
-            fiqh_notes=match.get("concern", "Requires origin verification."),
+            fiqh_notes=reason,
             reference_authority=match.get("standards_ref", "Halal Standard Guidelines")
         )
 
@@ -78,7 +107,7 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
             is_flagged=is_flagged,
             source=source,
             additive_detail=additive_detail,
-            reason=match.get("concern", "")
+            reason=reason
         )
 
     # Contextual heuristic checks for non-database terms
@@ -185,10 +214,43 @@ A Concerned Consumer"""
     return email_body, tweet, drafts
 
 
-def audit_compliance(parsed_vision_data: dict, metadata_dict: dict) -> AuditResponse:
+def _detect_allergens_and_diets(ingredients: List[IngredientItem]) -> Tuple[List[str], List[str]]:
+    """Detect common food allergens and dietary suitability tags from parsed ingredients."""
+    all_text = " ".join([f"{item.name} {item.raw_text}" for item in ingredients]).lower()
+
+    allergens = []
+    if any(k in all_text for k in ["wheat", "gluten", "barley", "rye", "malt", "spelt"]):
+        allergens.append("Wheat (Gluten)")
+    if any(k in all_text for k in ["milk", "whey", "casein", "lactose", "butter", "cheese", "cream", "dairy"]):
+        allergens.append("Dairy / Milk")
+    if any(k in all_text for k in ["peanut", "almond", "walnut", "cashew", "hazelnut", "pistachio", "pecan"]):
+        allergens.append("Tree Nuts / Peanuts")
+    if any(k in all_text for k in ["soy", "soya", "soybean", "tofu", "edamame"]):
+        allergens.append("Soy")
+    if any(k in all_text for k in ["egg", "albumen", "ovalbumin", "yolk"]):
+        allergens.append("Egg")
+    if any(k in all_text for k in ["fish", "salmon", "tuna", "shrimp", "crab", "crustacean", "anchovy", "shellfish"]):
+        allergens.append("Fish / Shellfish")
+
+    dietary_tags = []
+    has_animal_meat = any(k in all_text for k in ["gelatin", "pork", "beef", "chicken", "lard", "tallow", "bacon", "carmine", "cochineal"])
+    has_dairy_egg = any(k in all_text for k in ["milk", "dairy", "butter", "cheese", "whey", "egg", "honey"])
+
+    if not has_animal_meat and not has_dairy_egg:
+        dietary_tags.append("Vegan Suitable")
+    elif not has_animal_meat:
+        dietary_tags.append("Vegetarian")
+
+    if "Wheat (Gluten)" not in allergens:
+        dietary_tags.append("Gluten-Free Formula")
+
+    return allergens, dietary_tags
+
+
+def audit_compliance(parsed_vision_data: dict, metadata_dict: dict, madhhab: str = "standard") -> AuditResponse:
     """
-    Synthesize complete AuditResponse based on parsed vision ingredients
-    and the 350+ additives database.
+    Synthesize complete AuditResponse based on parsed vision ingredients,
+    additives database, and optional juristic profile (madhhab).
     """
     product_name = parsed_vision_data.get("product_name") or "Inspected Product"
     brand = parsed_vision_data.get("brand")
@@ -203,7 +265,7 @@ def audit_compliance(parsed_vision_data: dict, metadata_dict: dict) -> AuditResp
     has_mushbooh = False
 
     for raw in raw_ingredients:
-        item = _classify_ingredient(raw)
+        item = _classify_ingredient(raw, madhhab=madhhab)
         ingredients.append(item)
         if item.status == VerdictStatus.HARAM:
             has_haram = True
@@ -211,6 +273,9 @@ def audit_compliance(parsed_vision_data: dict, metadata_dict: dict) -> AuditResp
         elif item.status == VerdictStatus.MUSHBOOH:
             has_mushbooh = True
             flagged_items.append(item)
+
+    # Detect allergens & dietary tags
+    allergens, dietary_tags = _detect_allergens_and_diets(ingredients)
 
     # Determine overall verdict
     if not ingredients:
@@ -266,5 +331,8 @@ def audit_compliance(parsed_vision_data: dict, metadata_dict: dict) -> AuditResp
         inquiry_tweet=tweet_text,
         inquiry_details=inquiry_drafts,
         disclaimer="TaqwaLens provides educational compliance analysis and is not a religious decree (fatwa). Verify with accredited scholars.",
-        metadata=metadata
+        metadata=metadata,
+        madhhab_profile=madhhab,
+        dietary_tags=dietary_tags,
+        allergens_detected=allergens
     )

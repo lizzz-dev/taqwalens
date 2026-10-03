@@ -305,3 +305,78 @@ def test_api_ecode_lookup():
     data = res.json()
     assert data["code"] == "E471"
     assert data["status"] == "MUSHBOOH"
+
+
+def test_madhhab_profile_hanafi():
+    """Verify that Hanafi profile flags Carmine E120 as strictly Haram."""
+    telemetry = {
+        "model_used": "test-model",
+        "processing_time_ms": 30,
+        "image_width": 600,
+        "image_height": 400,
+        "groq_fallback_triggered": False
+    }
+    vision_data = {
+        "is_valid_label": True,
+        "product_name": "Fruit Chews",
+        "brand": "CandyCo",
+        "ingredients": ["Sugar", "Color Carmine E120", "Citric Acid"],
+        "detected_certifications": []
+    }
+    res = audit_compliance(vision_data, telemetry, madhhab="hanafi")
+    assert res.overall_verdict == VerdictStatus.HARAM
+    assert res.madhhab_profile == "hanafi"
+    assert any("Hanafi" in item.reason for item in res.flagged_items)
+
+
+def test_allergen_and_dietary_tag_detection():
+    """Verify allergen detection (gluten, dairy) and dietary suitability."""
+    telemetry = {
+        "model_used": "test-model",
+        "processing_time_ms": 30,
+        "image_width": 600,
+        "image_height": 400,
+        "groq_fallback_triggered": False
+    }
+    vision_data = {
+        "is_valid_label": True,
+        "product_name": "Wheat & Milk Biscuit",
+        "brand": "Bakery",
+        "ingredients": ["Wheat Flour", "Sugar", "Whole Milk Powder", "Palm Oil"],
+        "detected_certifications": []
+    }
+    res = audit_compliance(vision_data, telemetry)
+    assert "Wheat (Gluten)" in res.allergens_detected
+    assert "Dairy / Milk" in res.allergens_detected
+    assert "Vegetarian" in res.dietary_tags
+
+
+def test_api_barcode_endpoint(monkeypatch):
+    """Test GET /api/barcode/{upc} with mocked OpenFoodFacts response."""
+    async def mock_get(self, url, headers=None):
+        class MockResponse:
+            status_code = 200
+            def json(self):
+                return {
+                    "status": 1,
+                    "product": {
+                        "product_name": "Lotus Biscoff Spread",
+                        "brands": "Lotus",
+                        "ingredients_text_en": "Original caramelised biscuits 58% (wheat flour, sugar, vegetable oils (palm, rapeseed), candy sugar syrup, raising agent (sodium hydrogen carbonate), soya flour, salt, cinnamon), rapeseed oil, sugar, emulsifier (soya lecithin), acid (citric acid).",
+                        "additives_tags": ["en:e322", "en:e330", "en:e500"],
+                        "labels_tags": ["en:halal"]
+                    }
+                }
+            def raise_for_status(self):
+                pass
+        return MockResponse()
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+
+    res = client.get("/api/barcode/5410126006957")
+    assert res.status_code == 200
+    data = res.json()
+    assert "Lotus Biscoff" in data["product_name"]
+    assert data["overall_verdict"] in ["HALAL", "MUSHBOOH"]
+    assert "Wheat (Gluten)" in data["allergens_detected"]
+    assert "Soy" in data["allergens_detected"]
