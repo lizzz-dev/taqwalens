@@ -176,11 +176,7 @@ export function AuthGateway({ onAuthenticate, onContinueAsGuest }: AuthGatewayPr
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF8F5] text-[#1C1917] flex flex-col justify-between overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F]">
-      {/* Ambient Radial Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-radial from-[#D4AF37]/10 via-[#1E3A2F]/5 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-radial from-[#1E3A2F]/10 via-[#10b981]/5 to-transparent blur-3xl pointer-events-none -z-10" />
-
+    <div className="relative min-h-screen w-full bg-[#FAF8F5]/75 text-[#1C1917] flex flex-col justify-between overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F]">
       {/* Top Header Bar */}
       <header className="w-full border-b border-[#EAE6DF] bg-[#FAF8F5]/85 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">

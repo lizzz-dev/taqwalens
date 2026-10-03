@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
+import { AmbientGlassAura } from "../components/AmbientGlassAura";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,8 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-[#FAF8F5]">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} min-h-full bg-[#FAF8F5] text-[#1C1917] font-sans antialiased overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} min-h-full bg-[#FAF8F5] text-[#1C1917] font-sans antialiased overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F] relative`}
       >
+        <AmbientGlassAura />
         {children}
       </body>
     </html>
