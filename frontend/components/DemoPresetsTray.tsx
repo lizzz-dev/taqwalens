@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Zap, CheckCircle2, AlertTriangle, XCircle, Sparkles } from "lucide-react";
+import { Zap, CheckCircle2, AlertTriangle, XCircle, Sparkles, Loader2 } from "lucide-react";
 import { soundManager } from "../lib/soundEffects";
 
 export interface DemoPreset {
@@ -82,10 +82,12 @@ export const DEMO_PRESETS: DemoPreset[] = [
 interface DemoPresetsTrayProps {
   onSelectPreset: (preset: DemoPreset) => void;
   selectedPresetId?: string | null;
+  isLoading?: boolean;
 }
 
-export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPresetsTrayProps) {
+export function DemoPresetsTray({ onSelectPreset, selectedPresetId, isLoading }: DemoPresetsTrayProps) {
   const handleSelect = (p: DemoPreset) => {
+    if (isLoading) return;
     soundManager.playClick();
     onSelectPreset(p);
   };
@@ -104,15 +106,15 @@ export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPreset
                 1-Click Demo
               </span>
             </h4>
-            <p className="text-[11px] text-[#78716C] hidden sm:block">
-              Select any real-world sample product to audit without needing physical packaging.
+            <p className="text-[11px] text-[#78716C]">
+              Tap any test product to launch an instant compliance audit.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Preset Pills Tray */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      {/* Preset Cards Grid: 2-column layout beside scanner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {DEMO_PRESETS.map((preset) => {
           const isSelected = selectedPresetId === preset.id;
           const badgeColor =
@@ -126,38 +128,56 @@ export function DemoPresetsTray({ onSelectPreset, selectedPresetId }: DemoPreset
             <button
               key={preset.id}
               onClick={() => handleSelect(preset)}
-              className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between group active:scale-95 ${
+              disabled={isLoading}
+              className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between group active:scale-95 disabled:opacity-75 ${
                 isSelected
-                  ? "bg-white border-[#1E3A2F] shadow-sm ring-1 ring-[#1E3A2F]"
+                  ? "bg-white border-[#1E3A2F] shadow-sm ring-1.5 ring-[#1E3A2F]"
                   : "bg-white border-[#EAE6DF] hover:border-[#1E3A2F]/40 hover:bg-[#FAF8F5]"
               }`}
               title={preset.description}
             >
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-base sm:text-lg">{preset.icon}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">{preset.icon}</span>
+                    <span className="font-semibold text-xs text-[#1C1917] leading-tight">
+                      {preset.name}
+                    </span>
+                  </div>
                   <span
-                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border tracking-tight ${badgeColor}`}
+                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border tracking-tight shrink-0 ${badgeColor}`}
                   >
                     {preset.verdictType}
                   </span>
                 </div>
-                <div className="font-semibold text-xs text-[#1C1917] truncate leading-tight">
-                  {preset.name}
-                </div>
-                <div className="text-[10px] text-[#78716C] truncate mt-0.5">{preset.brand}</div>
+                <div className="text-[10px] text-[#78716C]">{preset.brand} • {preset.category}</div>
               </div>
 
               <div className="mt-2 pt-1.5 border-t border-[#EAE6DF]/60 flex items-center justify-between text-[10px] text-[#1E3A2F] font-medium">
-                <span className="truncate text-[#78716C] text-[9px]">{preset.verdictLabel}</span>
-                <span className="group-hover:translate-x-0.5 transition-transform text-[#1E3A2F] font-bold">
-                  Audit →
-                </span>
+                <span className="text-[#78716C] text-[10px] truncate max-w-[150px]">{preset.verdictLabel}</span>
+                {isSelected && isLoading ? (
+                  <span className="flex items-center gap-1 text-[#1E3A2F] font-bold text-[10px]">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Auditing...</span>
+                  </span>
+                ) : (
+                  <span className="group-hover:translate-x-0.5 transition-transform text-[#1E3A2F] font-bold text-[10px]">
+                    Audit Demo →
+                  </span>
+                )}
               </div>
             </button>
           );
         })}
       </div>
+
+      {/* Active Audit Status Banner */}
+      {isLoading && selectedPresetId && (
+        <div className="mt-2.5 p-2 bg-[#1E3A2F]/5 border border-[#1E3A2F]/15 rounded-xl flex items-center gap-2 text-xs text-[#1E3A2F] font-medium animate-pulse">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1E3A2F] shrink-0" />
+          <span>Executing optical OCR & Fiqh cross-check. Dossier loading below...</span>
+        </div>
+      )}
     </div>
   );
 }

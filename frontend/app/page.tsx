@@ -303,7 +303,6 @@ export default function Home() {
   const handleSelectDemoPreset = async (preset: DemoPreset) => {
     setSelectedPresetId(preset.id);
     setIsLoading(true);
-    setAuditResult(null);
     setErrorMessage(null);
     setStatusText(`Auditing sample ${preset.name}...`);
 
@@ -567,17 +566,18 @@ export default function Home() {
               isLoading={isLoading}
               statusText={statusText}
             />
+          </div>
 
-            {/* 1-Click Interactive Test Lab Presets Tray */}
+          {/* RIGHT PANEL: Interactive 3D Packaging & 1-Click Demo Lab (Cols 7-12) */}
+          <div className="lg:col-span-6 space-y-4 flex flex-col justify-start">
+            <ProductLens3D />
+
+            {/* 1-Click Interactive Test Lab Presets Tray (Positioned Beside Scanner) */}
             <DemoPresetsTray
               onSelectPreset={handleSelectDemoPreset}
               selectedPresetId={selectedPresetId}
+              isLoading={isLoading}
             />
-          </div>
-
-          {/* RIGHT PANEL: Interactive 3D Packaging & Magnifying TaqwaLens (Cols 7-12) */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <ProductLens3D />
           </div>
         </section>
 
