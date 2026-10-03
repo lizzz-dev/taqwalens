@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +12,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
+const cormorant = Cormorant_Garamond({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
 });
 
@@ -53,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-[#FAF8F5]">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} min-h-full bg-[#FAF8F5] text-[#1C1917] font-sans antialiased overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} min-h-full bg-[#FAF8F5] text-[#1C1917] font-sans antialiased overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F]`}
       >
         {children}
       </body>

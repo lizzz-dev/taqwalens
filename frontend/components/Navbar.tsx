@@ -43,17 +43,12 @@ export function Navbar({
             {/* Pop-up 3D Interactive Emblem */}
             <Logo3D className="w-12 h-12 sm:w-13 sm:h-13" />
 
-            {/* Elegant Stylish Editorial Typography */}
-            <div>
-              <div className="flex items-baseline">
-                <span className="font-serif font-black text-2xl sm:text-3xl lg:text-[34px] tracking-tight text-[#1C1917] leading-none">
-                  Taqwa
-                </span>
-                <span className="font-serif italic font-normal text-2xl sm:text-3xl lg:text-[34px] tracking-normal text-[#1E3A2F] leading-none ml-1">
-                  Lens
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-[#78716C] tracking-wide font-normal mt-1 hidden md:block">
+            {/* Elegant Subtle Islamic Editorial Typography */}
+            <div className="flex flex-col justify-center">
+              <span className="font-serif font-bold text-2xl sm:text-3xl lg:text-[34px] tracking-[0.025em] text-[#1C1917] leading-none select-none">
+                TaqwaLens
+              </span>
+              <p className="text-[10px] sm:text-[11px] text-[#78716C] tracking-[0.08em] uppercase font-medium mt-1 hidden sm:block">
                 Mindful Food & Ingredient Auditor
               </p>
             </div>
