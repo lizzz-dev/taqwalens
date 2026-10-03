@@ -245,6 +245,14 @@ export default function Home() {
       } else if (result.overall_verdict === "HARAM") {
         soundManager.playHaramTone();
       }
+
+      // Smoothly scroll down to the wide dossier findings
+      setTimeout(() => {
+        const findingsEl = document.getElementById("audit-findings");
+        if (findingsEl) {
+          findingsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "An unexpected audit error occurred.";
       setErrorMessage(msg);
@@ -278,6 +286,13 @@ export default function Home() {
       } else if (result.overall_verdict === "HARAM") {
         soundManager.playHaramTone();
       }
+
+      setTimeout(() => {
+        const findingsEl = document.getElementById("audit-findings");
+        if (findingsEl) {
+          findingsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Barcode audit failed.";
       setErrorMessage(msg);
@@ -606,70 +621,6 @@ export default function Home() {
                 }}
               />
             </div>
-
-            {/* LIVE AUDIT FINDINGS DOSSIER (Displays cleanly right here on the Left Side) */}
-            {auditResult && (
-              <div id="audit-findings" className="w-full space-y-6 pt-4 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#1C1917]">
-                      Compliance Audit Dossier
-                    </h3>
-                    <p className="text-xs text-[#78716C]">
-                      Optical evaluation and juristic additive matching completed under {auditResult.madhhab_profile || selectedMadhhab} school.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => handleOpenCertificateInNewTab(auditResult)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95 min-h-[36px]"
-                      title="Open official compliance certificate in a separate browser tab"
-                    >
-                      <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      <span>Certificate ↗</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setAuditResult(null);
-                        setScannerPreviewUrl(null);
-                        setSelectedPresetId(null);
-                      }}
-                      className="text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] shadow-2xs transition-colors min-h-[36px]"
-                    >
-                      Scan Another Item
-                    </button>
-                  </div>
-                </div>
-
-                {/* High-Impact 3D Tilt Verdict Card */}
-                <VerdictCard
-                  audit={auditResult}
-                  onOpenCertificate={() => handleOpenCertificateInNewTab(auditResult)}
-                />
-
-                {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}
-                {(auditResult.overall_verdict === "MUSHBOOH" || auditResult.flagged_items.length > 0) && (
-                  <InquiryDrawer audit={auditResult} />
-                )}
-
-                {/* Ask Sheikh AI Interactive Juristic Assistant */}
-                <AskSheikhAI
-                  productName={auditResult.product_name || "Food Item"}
-                  verdict={auditResult.overall_verdict}
-                  additives={auditResult.flagged_items.map((item) => ({
-                    code: item.additive_detail?.code || item.name,
-                    name: item.name,
-                    halal_status: item.status,
-                  }))}
-                  madhhab={selectedMadhhab}
-                />
-
-                {/* Detailed Ingredient Breakdown Grid */}
-                <IngredientGrid ingredients={auditResult.ingredients} />
-              </div>
-            )}
           </div>
 
           {/* RIGHT COLUMN (Desktop col-span-5 / col-span-6):
@@ -691,6 +642,81 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ------------------------------------------------------------- */}
+        {/* COMPREHENSIVE WIDE AUDIT DOSSIER (Full Width Across Page)     */}
+        {/* ------------------------------------------------------------- */}
+        {auditResult && (
+          <section
+            id="audit-findings"
+            className="w-full max-w-7xl mx-auto px-6 space-y-8 pt-8 pb-12 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-6 duration-300"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/70 backdrop-blur-sm border border-[#EAE6DF] p-5 sm:p-6 rounded-2xl shadow-xs">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-[#1C1917] tracking-tight">
+                    Compliance Audit Dossier
+                  </h3>
+                </div>
+                <p className="text-xs sm:text-sm text-[#78716C] mt-1">
+                  Optical evaluation and juristic additive matching completed under <span className="font-semibold text-[#1C1917] uppercase tracking-wider">{auditResult.madhhab_profile || selectedMadhhab}</span> school.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  onClick={() => handleOpenCertificateInNewTab(auditResult)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1E3A2F] text-white text-xs font-bold hover:bg-[#2D5A46] transition-all shadow-sm active:scale-95 min-h-[40px]"
+                  title="Open official compliance certificate in a separate browser tab"
+                >
+                  <Award className="w-4 h-4 text-[#D4AF37]" />
+                  <span>View Certificate Dossier ↗</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setAuditResult(null);
+                    setScannerPreviewUrl(null);
+                    setSelectedPresetId(null);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="text-xs font-medium text-[#78716C] hover:text-[#1C1917] px-4 py-2 rounded-full bg-white border border-[#EAE6DF] shadow-2xs hover:bg-[#FAF8F5] transition-colors min-h-[40px]"
+                >
+                  Scan Another Item
+                </button>
+              </div>
+            </div>
+
+            {/* High-Impact 3D Tilt Verdict Card (Wide across page) */}
+            <div className="w-full">
+              <VerdictCard
+                audit={auditResult}
+                onOpenCertificate={() => handleOpenCertificateInNewTab(auditResult)}
+              />
+            </div>
+
+            {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}
+            {(auditResult.overall_verdict === "MUSHBOOH" || auditResult.flagged_items.length > 0) && (
+              <InquiryDrawer audit={auditResult} />
+            )}
+
+            {/* Ask Sheikh AI Interactive Juristic Assistant */}
+            <AskSheikhAI
+              productName={auditResult.product_name || "Food Item"}
+              verdict={auditResult.overall_verdict}
+              additives={auditResult.flagged_items.map((item) => ({
+                code: item.additive_detail?.code || item.name,
+                name: item.name,
+                halal_status: item.status,
+              }))}
+              madhhab={selectedMadhhab}
+            />
+
+            {/* Detailed Ingredient Breakdown Grid across full width */}
+            <IngredientGrid ingredients={auditResult.ingredients} />
+          </section>
+        )}
 
         {/* Authoritative Educational Notice */}
         <div className="max-w-7xl mx-auto px-6 pb-12">
