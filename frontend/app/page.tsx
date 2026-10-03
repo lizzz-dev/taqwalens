@@ -11,8 +11,9 @@ import { Disclaimer } from "../components/Disclaimer";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { PrintCertificateModal } from "../components/PrintCertificateModal";
 import { QuickSearchModal } from "../components/QuickSearchModal";
+import { AuthGateway } from "../components/AuthGateway";
 import { auditProductImage, auditProductBarcode, checkBackendHealth } from "../lib/api";
-import { AuditResponse, HistoryItem, MadhhabProfile } from "../lib/types";
+import { AuditResponse, HistoryItem, MadhhabProfile, UserProfile } from "../lib/types";
 import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert, Award, Barcode } from "lucide-react";
 
 export default function Home() {
@@ -29,6 +30,55 @@ export default function Home() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isCertificateOpen, setIsCertificateOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+
+  // User Authentication & 3D Welcome Gateway State
+  // ROLLBACK TOGGLE: set ENABLE_AUTH_GATEWAY = false to bypass the gateway anytime
+  const ENABLE_AUTH_GATEWAY = true;
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isAuthGatewayOpen, setIsAuthGatewayOpen] = useState<boolean>(true);
+
+  // Check saved session in localStorage on mount
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem("taqwalens_auth_user");
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser) as UserProfile;
+        setCurrentUser(parsed);
+        if (parsed.madhhab) {
+          setSelectedMadhhab(parsed.madhhab);
+        }
+        setIsAuthGatewayOpen(false);
+      }
+    } catch (err) {
+      console.warn("Could not read saved user session:", err);
+    }
+  }, []);
+
+  const handleAuthenticate = (user: UserProfile) => {
+    setCurrentUser(user);
+    if (user.madhhab) {
+      setSelectedMadhhab(user.madhhab);
+    }
+    try {
+      localStorage.setItem("taqwalens_auth_user", JSON.stringify(user));
+    } catch (err) {
+      console.warn("Could not persist user session:", err);
+    }
+    setIsAuthGatewayOpen(false);
+  };
+
+  const handleContinueAsGuest = () => {
+    const guestUser: UserProfile = {
+      name: "Guest Evaluator",
+      email: "guest.auditor@taqwalens.org",
+      madhhab: "standard",
+      dietaryPreferences: [],
+      role: "guest",
+      avatarInitials: "⚡",
+      createdAt: Date.now(),
+    };
+    handleAuthenticate(guestUser);
+  };
 
   // Load scan history from localStorage on client mount
   useEffect(() => {
@@ -294,6 +344,16 @@ export default function Home() {
     }, "image/jpeg", 0.92);
   };
 
+  // Render Award-Winning 3D Auth & Onboarding Gateway as First Page
+  if (ENABLE_AUTH_GATEWAY && isAuthGatewayOpen) {
+    return (
+      <AuthGateway
+        onAuthenticate={handleAuthenticate}
+        onContinueAsGuest={handleContinueAsGuest}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917] flex flex-col relative overflow-x-hidden">
       {/* Editorial Navbar with Madhhab Profile Selector & History Drawer Trigger */}
@@ -305,6 +365,8 @@ export default function Home() {
         onOpenSearch={() => setIsSearchOpen(true)}
         selectedMadhhab={selectedMadhhab}
         onChangeMadhhab={(m) => setSelectedMadhhab(m)}
+        currentUser={currentUser}
+        onOpenAuthGateway={() => setIsAuthGatewayOpen(true)}
       />
 
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">

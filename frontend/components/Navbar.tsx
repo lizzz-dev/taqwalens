@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Search, Clock, Scale } from "lucide-react";
-import { MadhhabProfile } from "../lib/types";
+import { Search, Clock, Scale, User, LogOut } from "lucide-react";
+import { MadhhabProfile, UserProfile } from "../lib/types";
 import { Logo3D } from "./3d/Logo3D";
 
 interface NavbarProps {
@@ -13,6 +13,8 @@ interface NavbarProps {
   onOpenSearch?: () => void;
   selectedMadhhab?: MadhhabProfile;
   onChangeMadhhab?: (m: MadhhabProfile) => void;
+  currentUser?: UserProfile | null;
+  onOpenAuthGateway?: () => void;
 }
 
 export function Navbar({
@@ -21,6 +23,8 @@ export function Navbar({
   onOpenSearch,
   selectedMadhhab = "standard",
   onChangeMadhhab,
+  currentUser,
+  onOpenAuthGateway,
 }: NavbarProps) {
   // Global Ctrl+K / Cmd+K listener for instant search
   useEffect(() => {
@@ -80,10 +84,20 @@ export function Navbar({
                 )}
               </button>
             )}
+
+            {onOpenAuthGateway && (
+              <button
+                onClick={onOpenAuthGateway}
+                className="w-10 h-10 rounded-full bg-[#1E3A2F] text-[#D4AF37] font-serif text-xs font-bold flex items-center justify-center border border-[#D4AF37]/50 shadow-2xs active:scale-95"
+                title="Switch Auditor Profile or Sign Out"
+              >
+                {currentUser?.avatarInitials || "TL"}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Desktop Controls: Instant Additive Search, Fiqh Profile Selector, History Drawer */}
+        {/* Desktop Controls: Instant Additive Search, Fiqh Profile Selector, History Drawer, User Profile */}
         <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 text-xs">
           {/* Instant E-Code Search Button */}
           {onOpenSearch && (
@@ -135,6 +149,23 @@ export function Navbar({
                   {historyCount}
                 </span>
               )}
+            </button>
+          )}
+
+          {/* Auditor Profile Chip / Switch Profile Button */}
+          {onOpenAuthGateway && (
+            <button
+              onClick={onOpenAuthGateway}
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#D4AF37]/60 hover:border-[#1E3A2F] text-xs font-semibold text-[#1C1917] shadow-2xs transition-all active:scale-95 min-h-[40px] group"
+              title="Click to view 3D Auditor Credential, switch profile, or sign out"
+            >
+              <div className="w-6 h-6 rounded-full bg-[#1E3A2F] text-[#D4AF37] font-serif text-[11px] font-bold flex items-center justify-center border border-[#D4AF37]/50 group-hover:scale-105 transition-transform">
+                {currentUser?.avatarInitials || "⚡"}
+              </div>
+              <span className="max-w-[120px] truncate text-[11px]">
+                {currentUser?.name || "Guest Pass"}
+              </span>
+              <LogOut className="w-3 h-3 text-[#78716C] group-hover:text-[#1E3A2F] transition-colors ml-0.5" />
             </button>
           )}
         </div>

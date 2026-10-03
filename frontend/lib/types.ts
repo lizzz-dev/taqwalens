@@ -71,3 +71,13 @@ export interface HistoryItem {
   inputType: 'image' | 'barcode' | 'preset';
   barcode?: string;
 }
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  madhhab: MadhhabProfile;
+  dietaryPreferences: string[];
+  role: 'guest' | 'auditor' | 'scholar' | 'consumer';
+  avatarInitials: string;
+  createdAt: number;
+}
