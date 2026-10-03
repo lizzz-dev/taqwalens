@@ -37,21 +37,62 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isAuthGatewayOpen, setIsAuthGatewayOpen] = useState<boolean>(true);
 
-  // Check saved session in localStorage on mount
+  // Check saved session and synchronize browser history (Back / Forward arrow support)
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem("taqwalens_auth_user");
+      const hash = window.location.hash;
+
       if (savedUser) {
         const parsed = JSON.parse(savedUser) as UserProfile;
         setCurrentUser(parsed);
         if (parsed.madhhab) {
           setSelectedMadhhab(parsed.madhhab);
         }
+      }
+
+      if (hash === "#gateway") {
+        setIsAuthGatewayOpen(true);
+      } else if (hash === "#studio") {
         setIsAuthGatewayOpen(false);
+      } else if (savedUser) {
+        setIsAuthGatewayOpen(false);
+        window.history.replaceState({ screen: "studio" }, "", "#studio");
+      } else {
+        setIsAuthGatewayOpen(true);
+        window.history.replaceState({ screen: "gateway" }, "", "#gateway");
       }
     } catch (err) {
-      console.warn("Could not read saved user session:", err);
+      console.warn("Could not initialize session/history:", err);
     }
+
+    // Global listener for browser Back (←) and Forward (→) buttons
+    const handlePopState = (e: PopStateEvent) => {
+      const hash = window.location.hash;
+      const screen = e.state?.screen;
+
+      if (hash === "#gateway" || screen === "gateway") {
+        setIsAuthGatewayOpen(true);
+        setIsCertificateOpen(false);
+        setIsHistoryOpen(false);
+        setIsSearchOpen(false);
+      } else if (hash === "#certificate" || screen === "certificate") {
+        setIsCertificateOpen(true);
+      } else if (hash === "#history" || screen === "history") {
+        setIsHistoryOpen(true);
+      } else if (hash === "#search" || screen === "search") {
+        setIsSearchOpen(true);
+      } else {
+        // Back to Studio
+        setIsAuthGatewayOpen(false);
+        setIsCertificateOpen(false);
+        setIsHistoryOpen(false);
+        setIsSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   const handleAuthenticate = (user: UserProfile) => {
@@ -64,7 +105,13 @@ export default function Home() {
     } catch (err) {
       console.warn("Could not persist user session:", err);
     }
+    window.history.pushState({ screen: "studio" }, "", "#studio");
     setIsAuthGatewayOpen(false);
+  };
+
+  const handleOpenAuthGateway = () => {
+    window.history.pushState({ screen: "gateway" }, "", "#gateway");
+    setIsAuthGatewayOpen(true);
   };
 
   const handleContinueAsGuest = () => {
@@ -78,6 +125,17 @@ export default function Home() {
       createdAt: Date.now(),
     };
     handleAuthenticate(guestUser);
+  };
+
+  const handleOpenCertificateInNewTab = (audit?: AuditResponse | null) => {
+    const targetAudit = audit || auditResult;
+    if (!targetAudit) return;
+    try {
+      localStorage.setItem("taqwalens_current_dossier", JSON.stringify(targetAudit));
+    } catch (err) {
+      console.warn("Could not persist current dossier:", err);
+    }
+    window.open("/certificate", "_blank");
   };
 
   // Load scan history from localStorage on client mount
@@ -366,7 +424,7 @@ export default function Home() {
         selectedMadhhab={selectedMadhhab}
         onChangeMadhhab={(m) => setSelectedMadhhab(m)}
         currentUser={currentUser}
-        onOpenAuthGateway={() => setIsAuthGatewayOpen(true)}
+        onOpenAuthGateway={handleOpenAuthGateway}
       />
 
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
@@ -517,11 +575,12 @@ export default function Home() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setIsCertificateOpen(true)}
+                  onClick={() => handleOpenCertificateInNewTab(auditResult)}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95 min-h-[38px]"
+                  title="Open official compliance certificate in a separate browser tab"
                 >
-                  <Award className="w-3.5 h-3.5 text-[#CBE0D4]" />
-                  <span>View Certificate Dossier</span>
+                  <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <span>View Certificate Dossier ↗</span>
                 </button>
 
                 <button
@@ -539,7 +598,7 @@ export default function Home() {
             {/* High-Impact 3D Tilt Verdict Card */}
             <VerdictCard
               audit={auditResult}
-              onOpenCertificate={() => setIsCertificateOpen(true)}
+              onOpenCertificate={() => handleOpenCertificateInNewTab(auditResult)}
             />
 
             {/* 1-Click Brand Inquiry Drawer (Mushbooh items) */}

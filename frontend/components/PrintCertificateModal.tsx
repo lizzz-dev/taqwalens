@@ -17,6 +17,7 @@ import {
   Shield,
   Download,
   FileText,
+  ExternalLink,
 } from "lucide-react";
 import { AuditResponse, VerdictStatus } from "../lib/types";
 import { formatTime } from "../lib/utils";
@@ -319,6 +320,24 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
               >
                 <Download className="w-3.5 h-3.5 text-[#1E3A2F]" />
                 <span>Save File</span>
+              </button>
+
+              {/* Open in Separate Tab Option */}
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem("taqwalens_current_dossier", JSON.stringify(audit));
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                  window.open("/certificate", "_blank");
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] text-xs font-medium hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/40 transition-all shadow-2xs active:scale-95 min-h-[38px]"
+                title="Open certificate in a separate browser tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-[#1E3A2F]" />
+                <span className="hidden sm:inline">New Tab ↗</span>
+                <span className="sm:hidden">↗</span>
               </button>
 
               {/* Primary Print / Save PDF Option */}
