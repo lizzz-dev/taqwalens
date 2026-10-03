@@ -2,7 +2,21 @@
 
 import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Printer, ShieldCheck, CheckCircle2, AlertTriangle, XCircle, HelpCircle, Award, Sparkles, Calendar, Tag, Shield } from "lucide-react";
+import {
+  X,
+  Printer,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  HelpCircle,
+  Award,
+  Sparkles,
+  Calendar,
+  Tag,
+  Shield,
+  Download,
+} from "lucide-react";
 import { AuditResponse, VerdictStatus } from "../lib/types";
 import { formatTime } from "../lib/utils";
 
@@ -14,6 +28,27 @@ interface PrintCertificateModalProps {
 
 export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertificateModalProps) {
   const sealCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Keyboard shortcut (Escape to close) and body scroll lock
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Lock background scrolling
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   // Animated 3D Holographic Seal Effect
   useEffect(() => {
@@ -183,42 +218,62 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static print:inset-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ duration: 0.2 }}
-          className="relative w-full max-w-3xl rounded-3xl bg-white border border-[#EAE6DF] shadow-2xl overflow-hidden print:shadow-none print:border-none print:max-w-none print:rounded-none"
+      <div
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+        className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex flex-col items-center justify-start p-3 sm:p-6 py-6 sm:py-10 print:p-0 print:bg-white print:static print:inset-auto"
+      >
+        {/* Floating Quick Close Button (Top-Right of Screen) */}
+        <button
+          onClick={onClose}
+          className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 p-2.5 rounded-full bg-white/95 hover:bg-white text-[#1C1917] shadow-2xl border border-[#EAE6DF] hover:border-[#1E3A2F] transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold print:hidden cursor-pointer"
+          title="Close Certificate (Esc)"
         >
-          {/* Top Modal Action Bar (Hidden in Print) */}
-          <div className="print:hidden flex items-center justify-between px-6 py-4 border-b border-[#F0EBE1] bg-[#FAF8F5]">
+          <X className="w-4 h-4 text-[#1C1917]" />
+          <span className="hidden sm:inline">Close (Esc)</span>
+        </button>
+
+        {/* Modal Window Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 15 }}
+          transition={{ duration: 0.2 }}
+          className="relative w-full max-w-3xl rounded-3xl bg-white border border-[#EAE6DF] shadow-2xl overflow-hidden print:shadow-none print:border-none print:max-w-none print:rounded-none my-auto sm:my-4"
+        >
+          {/* Sticky Top Modal Action Bar (Always Visible at Top of Modal) */}
+          <div className="sticky top-0 z-30 print:hidden flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[#F0EBE1] bg-[#FAF8F5]/98 backdrop-blur-md shadow-xs">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-[#1E3A2F]" />
-              <span className="font-serif font-bold text-sm text-[#1C1917]">
+              <span className="font-serif font-bold text-xs sm:text-sm text-[#1C1917] truncate">
                 Official Compliance Dossier & Certificate
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-colors shadow-2xs active:scale-95"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1E3A2F] text-white text-xs font-bold hover:bg-[#2D5A46] transition-all shadow-sm active:scale-95 min-h-[38px]"
+                title="Print or save as PDF"
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print / Save PDF</span>
+                <Printer className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span className="hidden sm:inline">Download PDF / Print</span>
+                <span className="sm:hidden">Print PDF</span>
               </button>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-full text-[#78716C] hover:text-[#1C1917] hover:bg-white/80 transition-colors"
-                title="Close"
+                className="p-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/40 transition-colors shadow-2xs active:scale-95 min-h-[38px] min-w-[38px] flex items-center justify-center"
+                title="Close Dossier"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Certificate Body (Printed Content) */}
-          <div className="p-6 sm:p-10 space-y-7 text-[#1C1917] bg-[#FCFBF8] border-8 border-double border-[#EAE6DF] m-3 sm:m-4 rounded-2xl print:m-0 print:border-4">
+          <div className="p-5 sm:p-10 space-y-7 text-[#1C1917] bg-[#FCFBF8] border-8 border-double border-[#EAE6DF] m-3 sm:m-4 rounded-2xl print:m-0 print:border-4">
             {/* Header: Emblems, Title, and 3D Holographic Seal */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b-2 border-[#1E3A2F]/20 text-center sm:text-left">
               <div className="space-y-1.5">
@@ -245,80 +300,74 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
                   ref={sealCanvasRef}
                   width={150}
                   height={150}
-                  className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-md"
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-md"
                 />
                 <span className="text-[10px] font-medium text-[#78716C] mt-1 font-mono tracking-tight">
-                  SEAL AUTHENTICATED
+                  Crypto Holographic Seal
                 </span>
               </div>
             </div>
 
-            {/* Product Overview Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-white border border-[#EAE6DF] shadow-2xs">
-              <div className="sm:col-span-2 space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-[#A8A29E] tracking-wider">
-                  Audited Product
+            {/* Product Dossier Summary Banner */}
+            <div className="p-4 sm:p-5 rounded-xl bg-white border border-[#EAE6DF] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-[10px] text-[#78716C] uppercase font-mono tracking-wider">
+                  Inspected Specimen
                 </span>
-                <h3 className="text-lg sm:text-xl font-serif font-bold text-[#1C1917]">
+                <h2 className="text-lg sm:text-xl font-serif font-bold text-[#1C1917]">
                   {audit.product_name}
-                </h3>
-                <p className="text-xs text-[#78716C]">
-                  Brand: {audit.brand || "Unspecified / Generic"} • Processing Time: {formatTime(audit.metadata.processing_time_ms)}
+                </h2>
+                {audit.brand && (
+                  <p className="text-xs text-[#57534E]">Brand: {audit.brand}</p>
+                )}
+                <p className="text-[11px] text-[#78716C]">
+                  Juristic Rule Applied:{" "}
+                  <strong className="text-[#1E3A2F] uppercase">
+                    {audit.madhhab_profile || "Standard (Consensus)"}
+                  </strong>
                 </p>
               </div>
 
-              <div className="flex flex-col justify-center sm:items-end space-y-1">
-                <span className="text-[10px] uppercase font-semibold text-[#A8A29E] tracking-wider">
-                  Juristic Profile
-                </span>
-                <span className="text-xs font-medium text-[#1E3A2F] bg-[#F0F5F2] px-3 py-1 rounded-full border border-[#CBE0D4] inline-block capitalize">
-                  {audit.madhhab_profile ? `${audit.madhhab_profile} Standard` : "Standard Consensus"}
-                </span>
+              {/* Authoritative Stamp Badge */}
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-serif font-bold text-sm tracking-wide shrink-0 ${stamp.bg} ${stamp.border} ${stamp.color}`}
+              >
+                <StampIcon className="w-5 h-5" />
+                <span>{stamp.text}</span>
               </div>
             </div>
 
-            {/* Official Verdict Stamp Banner */}
-            <div
-              className={`p-5 rounded-2xl border-2 ${stamp.border} ${stamp.bg} flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-2xs`}
-            >
-              <div className="flex items-center gap-3.5">
-                <StampIcon className={`w-8 h-8 ${stamp.color} shrink-0`} />
-                <div>
-                  <span className="text-[10px] uppercase tracking-widest font-bold opacity-75">
-                    Official Audit Finding
-                  </span>
-                  <h4 className={`text-xl sm:text-2xl font-serif font-bold ${stamp.color}`}>
-                    {stamp.text}
-                  </h4>
-                </div>
-              </div>
-
-              <div className="text-xs text-[#44403C] max-w-sm sm:text-right font-medium leading-relaxed">
+            {/* Verdict Explanation & Summary */}
+            <div className="space-y-2">
+              <h3 className="text-xs uppercase tracking-wider text-[#78716C] font-semibold">
+                Summary of Juristic Evaluation
+              </h3>
+              <p className="text-xs sm:text-sm text-[#44403C] leading-relaxed bg-white p-4 rounded-xl border border-[#EAE6DF]">
                 {audit.verdict_summary}
-              </div>
+              </p>
             </div>
 
-            {/* Dietary Tags & Allergen Alerts */}
+            {/* Dietary Tags & Detected Certifications */}
             {((audit.dietary_tags && audit.dietary_tags.length > 0) ||
               (audit.allergens_detected && audit.allergens_detected.length > 0)) && (
-              <div className="p-4 rounded-xl bg-white border border-[#EAE6DF] space-y-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#A8A29E] tracking-wider block">
+              <div className="p-4 rounded-xl bg-white border border-[#EAE6DF] space-y-2">
+                <h4 className="text-[11px] uppercase tracking-wider text-[#78716C] font-semibold">
                   Dietary Suitability & Allergen Declaration
-                </span>
+                </h4>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  {audit.dietary_tags?.map((diet) => (
+                  {audit.dietary_tags?.map((tag) => (
                     <span
-                      key={diet}
-                      className="px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] font-medium inline-flex items-center gap-1.5"
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] font-medium"
                     >
                       <Sparkles className="w-3 h-3 text-[#059669]" />
-                      <span>{diet}</span>
+                      <span>{tag}</span>
                     </span>
                   ))}
                   {audit.allergens_detected?.map((allergen) => (
                     <span
                       key={allergen}
-                      className="px-3 py-1 rounded-full bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E] font-medium inline-flex items-center gap-1.5"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] font-medium"
                     >
                       <AlertTriangle className="w-3 h-3 text-[#D97706]" />
                       <span>Allergen: {allergen}</span>
@@ -328,21 +377,21 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
               </div>
             )}
 
-            {/* Additives & E-Codes Audit Table */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <h4 className="font-serif font-bold text-sm text-[#1C1917] tracking-tight">
+            {/* Full Ingredients Table */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs uppercase tracking-wider text-[#78716C] font-semibold">
                   Detailed Additive & Ingredient Inventory
-                </h4>
-                <span className="text-[#78716C] text-[11px]">
+                </h3>
+                <span className="text-[11px] text-[#A8A29E] font-mono">
                   {audit.ingredients.length} items cataloged
                 </span>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-[#EAE6DF] bg-white">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#FAF8F5] border-b border-[#EAE6DF] text-[#78716C] font-semibold text-[11px] uppercase tracking-wider">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FAF8F5] text-[#78716C] font-medium border-b border-[#EAE6DF]">
+                    <tr>
                       <th className="py-2.5 px-3.5">Ingredient / E-Code</th>
                       <th className="py-2.5 px-3">Status</th>
                       <th className="py-2.5 px-3">Origin</th>
@@ -369,10 +418,12 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
                           </span>
                         </td>
                         <td className="py-2.5 px-3 capitalize text-[#78716C]">
-                          {item.source || item.additive_detail?.source || "Unspecified"}
+                          {item.source || item.additive_detail?.source || "Unknown"}
                         </td>
                         <td className="py-2.5 px-3.5 text-[#44403C] text-[11px] leading-relaxed">
-                          {item.reason || item.additive_detail?.fiqh_notes || "Compliant with standard Islamic dietary thresholds."}
+                          {item.reason ||
+                            item.additive_detail?.fiqh_notes ||
+                            "Unlisted / Standard Ingredient. No prohibited or ambiguous chemical additives identified in initial scan."}
                         </td>
                       </tr>
                     ))}
@@ -384,7 +435,9 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
             {/* Authoritative Sign-off & Disclaimer Footer */}
             <div className="pt-4 border-t border-[#EAE6DF] space-y-3 text-[11px] text-[#78716C] leading-relaxed">
               <p>
-                <strong className="text-[#1C1917]">Regulatory Reference Standards:</strong> JAKIM MS 1500:2019 (Halal Food Production Preparation, Handling and Storage), Codex Alimentarius CAC/GL 24-1997, and Gulf Standard GSO 993.
+                <strong className="text-[#1C1917]">Regulatory Reference Standards:</strong> JAKIM
+                MS 1500:2019 (Halal Food Production Preparation, Handling and Storage), Codex
+                Alimentarius CAC/GL 24-1997, and Gulf Standard GSO 993.
               </p>
               <p className="italic bg-[#FAF8F5] p-3 rounded-lg border border-[#EAE6DF]">
                 <strong className="not-italic text-[#1C1917]">Notice:</strong> {audit.disclaimer}
@@ -393,6 +446,29 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
                 <span>VERIFICATION HASH: {certId}-VERIFIED-ENGINE-v1</span>
                 <span>TAQWALENS AUTONOMOUS AUDITOR</span>
               </div>
+            </div>
+          </div>
+
+          {/* Bottom Modal Action Bar (Always Available at bottom of modal) */}
+          <div className="print:hidden flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 bg-[#FAF8F5] border-t border-[#F0EBE1]">
+            <div className="flex items-center gap-2 text-xs text-[#78716C]">
+              <ShieldCheck className="w-4 h-4 text-[#1E3A2F]" />
+              <span>Official Verified Fiqh Compliance Record</span>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handlePrint}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1E3A2F] text-white text-xs font-bold hover:bg-[#2D5A46] transition-colors shadow-sm active:scale-95 min-h-[40px]"
+              >
+                <Printer className="w-4 h-4 text-[#D4AF37]" />
+                <span>Download PDF / Print</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-full bg-white border border-[#EAE6DF] text-xs font-semibold text-[#1C1917] hover:bg-[#FAF8F5] transition-colors shadow-2xs active:scale-95 min-h-[40px]"
+              >
+                Close Dossier
+              </button>
             </div>
           </div>
         </motion.div>
