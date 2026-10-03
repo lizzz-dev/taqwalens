@@ -54,50 +54,59 @@
 
 ---
 
-## Phase 2: Next.js 14 Frontend & 3D Scanner UI
+## Phase 2: Next.js 14 Frontend & Interactive Interface
 
-- [ ] **2.1 Frontend Project Initialization**
-  - [ ] Setup Next.js 14 App Router project in `frontend/`.
-  - [ ] Configure Tailwind CSS / custom design tokens with a futuristic Islamic aesthetic (deep emerald `#064E3B`, obsidian `#0F172A`, gold `#F59E0B`, ruby `#EF4444`).
-  - [ ] Install 3D & UI libraries: `@react-three/fiber`, `@react-three/drei`, `three`, `lucide-react`, `framer-motion`.
+- [x] **2.1 Frontend Project Initialization**
+  - [x] Scaffold Next.js 14 App Router project in `frontend/` with TypeScript & Tailwind CSS.
+  - [x] Enforce institutional design tokens: deep neutral slate (`bg-slate-950` / `bg-slate-900`), hairline borders (`border-slate-800`), refined emerald (`#059669`), warm honey amber (`#D97706`), and muted crimson (`#DC2626`).
+  - [x] Install packages: `framer-motion`, `lucide-react`, `clsx`, `tailwind-merge`.
+  - [x] Configure `NEXT_PUBLIC_API_URL=http://localhost:8000` in `frontend/.env.local`.
 
-- [ ] **2.2 Client-Side Image Preprocessing**
-  - [ ] Implement `lib/compressor.ts`:
-    - Automatic canvas-based resize to max 1024px before sending over the wire.
-    - Camera snapshot compression reducing network latency by $>70\%$.
+- [x] **2.2 Client-Side Image Preprocessing**
+  - [x] Implement `compressImage` in `lib/api.ts`:
+    - Canvas-based auto-resizing downsampling images to max 1024x1024 before network transmission.
+    - Client-side 10MB payload ceiling validation.
 
-- [ ] **2.3 3D Interactive Laser Scanner**
-  - [ ] Build `components/scanner/3DScanner.tsx`:
-    - Canvas / Three.js 3D viewport featuring a futuristic holographic targeting reticle.
-    - Animating vertical laser scan grid with audio-visual micro-interactions.
-    - Live webcam stream integration with camera toggle (rear/front).
-    - Drag-and-drop image upload zone with instant preview.
+- [x] **2.3 Precision Scanning Interface**
+  - [x] Build `components/Scanner.tsx`:
+    - Dual input tabs: "Live Camera Viewfinder" and "File Drag & Drop".
+    - Real-time webcam stream via `getUserMedia` with shutter capture button.
+    - Precision laser sweep animation with live telemetry HUD during audit.
 
-- [ ] **2.4 Audit Results Presentation**
-  - [ ] Build `components/audit/VerdictCard.tsx`:
-    - Dynamic verdict pill with pulsating status glow (`HALAL`, `HARAM`, `MUSHBOOH`).
-    - Halal certification badges detected on packaging (JAKIM, MUI, IFANCA, etc.).
-    - Prominent Non-Fatwa Educational Disclaimer banner.
-  - [ ] Build `components/audit/IngredientAccordion.tsx`:
-    - Full ingredient list with color-coded status chips.
-    - Expandable cards revealing E-code chemical description, biological source, and Madhhab/Fiqh rationale.
+- [x] **2.4 Audit Results Presentation**
+  - [x] Build `components/VerdictCard.tsx`:
+    - Framer Motion 3D interactive card tilt effect on mouse hover.
+    - Refined status badges (Halal `#059669`, Mushbooh `#D97706`, Haram `#DC2626`).
+    - Telemetry bar displaying model used, latency, post-compression dimensions, and fallback status.
+  - [x] Build `components/IngredientGrid.tsx`:
+    - Metric summary pills: Total parsed, Halal count, Mushbooh count, Haram count.
+    - Interactive chip grid with expandable detail dossier for each additive.
 
-- [ ] **2.5 1-Click Brand Inquiry Drawer**
-  - [ ] Build `components/inquiry/InquiryDrawer.tsx`:
-    - Slides out when Mushbooh items are detected or user clicks "Inquire with Brand".
-    - Tab 1: Formal Email preview with `mailto:` trigger and 1-click clipboard copy.
-    - Tab 2: X/Twitter draft with direct Web Intent link (`twitter.com/intent/tweet`).
-    - Dynamic brand tagging and product name insertion.
+- [x] **2.5 1-Click Brand Inquiry Drawer**
+  - [x] Build `components/InquiryDrawer.tsx`:
+    - Renders pre-composed formal inquiry email and 280-char X/Twitter post for Mushbooh items.
+    - Functional 1-click clipboard copy with visual "Copied!" confirmation.
+    - Direct `mailto:` email client launcher and Twitter web intent button.
+
+- [x] **2.6 Informational Compliance & Navigation**
+  - [x] Build `components/Navbar.tsx`: Live backend connectivity indicator, Groq LPU engine badge, and indexed count.
+  - [x] Build `components/Disclaimer.tsx`: Authoritative educational non-fatwa notice.
 
 ---
 
 ## Phase 3: Integration, Performance & Demo Polish
 
-- [ ] **3.1 End-to-End Orchestration**
-  - [ ] Validate full loop: Next.js Camera Capture $\to$ Client-side compression $\to$ FastAPI $\to$ Groq Vision $\to$ E-code Engine $\to$ 3D Result Rendering.
-  - [ ] Test simulated Groq outage / 429 to prove instantaneous, silent Gemini 1.5 Flash fallback.
+- [x] **3.1 Anti-Hallucination & Non-Food Guard Implementation**
+  - [x] Strict OCR-only prompt in `backend/services/vision.py` prohibiting LLM verdict guessing.
+  - [x] Non-food / invalid image evaluation returning `is_valid_label: false` with descriptive error message.
+  - [x] FastAPI HTTP 422 Unprocessable Entity error envelope on invalid images and empty ingredient lists.
+  - [x] Deterministic Fiqh evaluation in Python `backend/services/engine.py` against `additives_db.py`.
+  - [x] Non-database ingredients classified as "Unlisted / Standard Ingredient" with neutral status.
+  - [x] Live optical canvas rendering for frontend Quick Test presets (no mock bypass).
+  - [x] Added "Invalid Image (Guard Test)" button to directly demonstrate non-food image rejection with HTTP 422 toast.
+  - [x] Full test suite (14 tests) passing in `backend/tests/test_backend.py`.
+  - [x] Next.js frontend builds with 0 TypeScript/Turbopack errors.
 
-- [ ] **3.2 Demo Packaging & Documentation**
-  - [ ] Provide sample packaging test images (Halal snack, Haram gelatin gummy, Mushbooh biscuit with E471).
+- [ ] **3.2 Start Scripts & Documentation**
   - [ ] Create simple start scripts (`start_backend.bat`, `start_frontend.bat`).
   - [ ] Comprehensive README with architecture diagrams and API walkthroughs.

@@ -263,7 +263,27 @@ async def audit_product_image(file: UploadFile = File(...)):
     # 3. Execute vision analysis (auto-compression & Groq -> Gemini fallback)
     parsed_vision_data, telemetry = await extract_packaging_data(chunk)
 
-    # 4. Synthesize compliance verdict and inquiry drafts
+    # 4. Strict Non-Food & Invalid Image Detection Guard
+    if not parsed_vision_data.get("is_valid_label", True):
+        error_msg = parsed_vision_data.get("error_message") or (
+            "No food ingredient panel or E-codes detected. Please capture a clear photo of the packaging label."
+        )
+        logger.warning(f"Rejected invalid non-food image: {error_msg}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg
+        )
+
+    # Ensure at least one ingredient was legibly extracted
+    extracted_ingredients = parsed_vision_data.get("ingredients") or []
+    if len(extracted_ingredients) == 0:
+        logger.warning("Rejected packaging image: No legible ingredients extracted.")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No food ingredient panel or E-codes detected. Please capture a clear photo of the packaging label."
+        )
+
+    # 5. Synthesize compliance verdict and inquiry drafts
     audit_result = audit_compliance(parsed_vision_data, telemetry)
     logger.info(f"Audit completed: '{audit_result.product_name}' -> {audit_result.overall_verdict} ({telemetry['model_used']})")
 

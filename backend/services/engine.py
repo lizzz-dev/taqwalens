@@ -84,6 +84,19 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
     # Contextual heuristic checks for non-database terms
     lower_term = raw_clean.lower()
     
+    # Explicit prohibited animal/intoxicant terms
+    prohibited_keywords = ["pork", "swine", "bacon", "ham", "lard", "carnitas", "alcohol", "wine", "beer", "rum", "liqueur"]
+    if any(k in lower_term for k in prohibited_keywords):
+        return IngredientItem(
+            name=raw_clean.title(),
+            raw_text=raw_clean,
+            status=VerdictStatus.HARAM,
+            is_flagged=True,
+            source=IngredientSource.ANIMAL if any(k in lower_term for k in ["pork", "swine", "bacon", "ham", "lard", "carnitas"]) else IngredientSource.UNKNOWN,
+            additive_detail=None,
+            reason="Prohibited substance identified in ingredient declaration."
+        )
+
     # Obvious Halal staples
     halal_keywords = [
         "water", "sugar", "salt", "flour", "wheat", "rice", "corn", "maize", "oat",
@@ -102,7 +115,7 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
             reason="Natural plant, mineral, or universal Halal food staple."
         )
 
-    # Suspicious non-specified terms
+    # Suspicious non-specified terms requiring origin verification
     if any(k in lower_term for k in ["flavor", "flavour", "shortening", "enzyme", "culture", "emulsifier"]):
         return IngredientItem(
             name=raw_clean.title(),
@@ -114,7 +127,7 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
             reason="Broad category ingredient without declared plant vs animal or alcohol carrier origin."
         )
 
-    # Default to neutral Halal with review note if simple staple
+    # Unlisted / Standard Ingredient (Neutral Halal status)
     return IngredientItem(
         name=raw_clean.title(),
         raw_text=raw_clean,
@@ -122,7 +135,7 @@ def _classify_ingredient(raw_text: str) -> IngredientItem:
         is_flagged=False,
         source=IngredientSource.UNKNOWN,
         additive_detail=None,
-        reason="General food ingredient. No prohibited substances identified in initial scan."
+        reason="Unlisted / Standard Ingredient. No prohibited or ambiguous chemical additives identified in initial scan."
     )
 
 

@@ -1,7 +1,9 @@
 """
-TaqwaLens Vision Service
-Handles image preprocessing (downscaling to max 1024x1024),
-Groq Llama 3.2 11B Vision primary inference, and automatic Gemini 1.5 Flash fallback.
+TaqwaLens Vision Service — Anti-Hallucination & Truthful Optical Pipeline
+Strict separation of concerns:
+1. Validates that image is a genuine food packaging label (rejects people, rooms, objects, blur).
+2. Performs faithful OCR extraction without hallucinating ingredients or guessing religious verdicts.
+3. Automatically falls back from Groq Llama 3.2 11B Vision to Gemini 1.5 Flash.
 """
 
 import io
@@ -19,29 +21,33 @@ load_dotenv()
 
 logger = logging.getLogger("taqwalens.vision")
 
-VISION_SYSTEM_PROMPT = """You are TaqwaLens Vision AI, an expert food packaging compliance auditor.
-Analyze the provided food packaging image and extract:
-1. Product name and brand (if visible).
-2. Complete list of ingredients listed in the ingredients statement (normalize and list each ingredient distinctly).
-3. Any visible Halal certification logos or markings (e.g. JAKIM, MUI, IFANCA, HMC, SANHA, Halal Correct, Crescent, etc.).
+VISION_SYSTEM_PROMPT = """You are TaqwaLens Vision AI, a rigorous, objective optical OCR scanner for food packaging labels.
 
-Return ONLY a valid JSON object matching this schema:
-{
-  "product_name": "Product Name or Inferred Item",
-  "brand": "Brand Name or null",
-  "ingredients": [
-    "ingredient 1 (e.g. Wheat Flour)",
-    "ingredient 2 (e.g. Emulsifier E471)",
-    "ingredient 3 (e.g. Carmine E120)"
-  ],
-  "detected_certifications": ["JAKIM", "IFANCA"]
-}
+FIRST, evaluate: Does this image contain a readable food packaging label, ingredient list, nutrition panel, or visible E-numbers/chemical additives?
+- If the image depicts a human face, clothing, shoe, room, scenery, pet, animal, blank screen, solid color, random non-food object, or is completely unreadable/blurry:
+  Return strictly:
+  {
+    "is_valid_label": false,
+    "error_message": "No food ingredient panel or E-codes detected. Please capture a clear photo of the packaging label.",
+    "product_name": null,
+    "brand": null,
+    "ingredients": [],
+    "detected_certifications": []
+  }
 
-Important:
-- If no ingredients are legible, return an empty array for ingredients.
-- Separate sub-ingredients (e.g. "chocolate (sugar, cocoa butter, milk powder)" -> ["sugar", "cocoa butter", "milk powder"]).
-- Keep E-numbers intact if listed (e.g. "E471", "E120", "INS 500").
-- Do NOT output any markdown backticks, extra commentary, or conversational filler. Only pure JSON.
+- If the image DOES contain a readable food packaging label or ingredient list:
+  Extract:
+  1. "is_valid_label": true
+  2. "error_message": null
+  3. "product_name": Extracted product name from packaging (or null if unstated)
+  4. "brand": Extracted brand/manufacturer name (or null)
+  5. "ingredients": An array of raw ingredient strings exactly as listed on the label. Break down compound ingredients into discrete items. Keep E-numbers and codes intact (e.g. "Emulsifier (E471)", "Carmine (E120)", "Wheat Flour").
+  6. "detected_certifications": An array of recognized Halal certifying logos or text (e.g. "JAKIM", "MUI", "IFANCA", "HMC", "SANHA", "BPJPH", "Halal Correct", "Halal").
+
+CRITICAL GROUND-TRUTH RULES:
+- DO NOT invent, hallucinate, or guess ingredients that are not visible in the image.
+- DO NOT assess or output any Halal/Haram/Mushbooh verdicts. Your sole responsibility is faithful OCR extraction of the raw text and visual badges.
+- Return ONLY valid JSON matching the schema above with no markdown fences, no conversational filler, and no commentary.
 """
 
 
@@ -120,35 +126,44 @@ async def call_groq_vision(image_bytes: bytes) -> dict:
     return _clean_json_output(content)
 
 
-async def call_gemini_vision(image_bytes: bytes) -> dict:
-    """Fallback: Invoke Gemini 1.5 Flash vision using google-genai SDK."""
+async def call_gemini_vision(image_bytes: bytes) -> Tuple[dict, str]:
+    """Fallback: Invoke Gemini Vision using google-genai SDK or REST."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or "your_gemini_api_key_here" in api_key:
         raise ValueError("GEMINI_API_KEY is not configured in .env")
 
-    try:
-        from google import genai
-        from google.genai import types
+    # Try supported active models in order of latency and quota resilience
+    candidate_models = ["gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"]
+    last_err = None
 
-        client = genai.Client(api_key=api_key)
-        response = await client.aio.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-                VISION_SYSTEM_PROMPT
-            ],
-            config=types.GenerateContentConfig(
-                temperature=0.1,
-                response_mime_type="application/json"
+    for model_name in candidate_models:
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=api_key)
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=[
+                    types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+                    VISION_SYSTEM_PROMPT
+                ],
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json"
+                )
             )
-        )
-        return _clean_json_output(response.text)
-    except Exception as e:
-        logger.warning(f"google-genai client call failed: {e}. Trying httpx REST fallback.")
-        # Direct REST fallback to Gemini 1.5 Flash endpoint if SDK encounters version mismatch
+            cleaned = _clean_json_output(response.text)
+            return cleaned, model_name
+        except Exception as e:
+            last_err = e
+            logger.warning(f"google-genai client call for {model_name} failed: {e}. Trying next...")
+
+    # If google-genai SDK attempts failed, try REST fallback
+    try:
         import httpx
         import base64
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={api_key}"
         b64_img = base64.b64encode(image_bytes).decode("utf-8")
         payload = {
             "contents": [{
@@ -164,7 +179,10 @@ async def call_gemini_vision(image_bytes: bytes) -> dict:
             res.raise_for_status()
             data = res.json()
             raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            return _clean_json_output(raw_text)
+            return _clean_json_output(raw_text), "gemini-3.5-flash-lite-rest"
+    except Exception as rest_err:
+        logger.error(f"Gemini REST fallback also failed: {rest_err}")
+        raise RuntimeError(f"All Gemini vision candidate models failed (Last SDK error: {last_err}, REST error: {rest_err})")
 
 
 async def extract_packaging_data(raw_image_bytes: bytes) -> Tuple[dict, dict]:
@@ -172,7 +190,7 @@ async def extract_packaging_data(raw_image_bytes: bytes) -> Tuple[dict, dict]:
     Main vision pipeline:
     1. Preprocesses & compresses image to max 1024x1024.
     2. Runs Groq Llama 3.2 Vision.
-    3. Seamlessly falls back to Gemini 1.5 Flash on any failure or rate limit.
+    3. Seamlessly falls back to Gemini 1.5 Flash on 429, timeouts, or exceptions.
     Returns: (parsed_data, telemetry_metadata)
     """
     start_time = time.time()
@@ -184,31 +202,20 @@ async def extract_packaging_data(raw_image_bytes: bytes) -> Tuple[dict, dict]:
 
     # Attempt Primary Engine: Groq Vision
     try:
-        logger.info("Attempting primary vision engine: Groq Llama 3.2 11B Vision...")
+        logger.info("Calling primary vision engine: Groq Llama 3.2 11B Vision...")
         result_data = await call_groq_vision(compressed_bytes)
     except Exception as groq_err:
-        logger.warning(f"Groq Vision failed or rate limited ({groq_err}). Triggering fallback to Gemini 1.5 Flash...")
+        logger.warning(f"Groq Vision unavailable ({groq_err}). Triggering fallback to Gemini 1.5 Flash...")
         fallback_triggered = True
         model_used = "gemini-1.5-flash"
         try:
-            result_data = await call_gemini_vision(compressed_bytes)
+            result_data, model_used = await call_gemini_vision(compressed_bytes)
         except Exception as gemini_err:
             logger.error(f"Gemini fallback also failed: {gemini_err}")
-            # If both fail (e.g. during demo without keys), provide graceful mock recovery
-            result_data = {
-                "product_name": "Sample Packaging Item (Demo Mode)",
-                "brand": "Demo Brand",
-                "ingredients": [
-                    "Wheat Flour",
-                    "Vegetable Oil",
-                    "Sugar",
-                    "Emulsifier (E471)",
-                    "Salt",
-                    "Natural Flavoring"
-                ],
-                "detected_certifications": []
-            }
-            model_used = "local-demo-engine"
+            # Neither API is reachable
+            raise RuntimeError(
+                f"Both Groq Vision and Gemini fallback failed. Check GROQ_API_KEY and GEMINI_API_KEY in .env. (Groq: {groq_err}, Gemini: {gemini_err})"
+            )
 
     latency_ms = int((time.time() - start_time) * 1000)
 

@@ -146,8 +146,139 @@ def test_payload_limit_enforcement():
     assert data["error"] == "Payload Too Large"
 
 
-def test_api_audit_endpoint_valid():
-    """Test POST /api/audit with a valid genuine JPEG."""
+def test_unlisted_ingredient_classification():
+    """Verify non-database terms are classified neutrally as Unlisted / Standard Ingredient."""
+    telemetry = {
+        "model_used": "test-model",
+        "processing_time_ms": 50,
+        "image_width": 800,
+        "image_height": 600,
+        "groq_fallback_triggered": False
+    }
+    vision_data = {
+        "is_valid_label": True,
+        "product_name": "Herbal Tea Blend",
+        "brand": "PureHerbs",
+        "ingredients": ["Dried Mint Leaves", "Crushed Cardamom Pods"],
+        "detected_certifications": []
+    }
+    res = audit_compliance(vision_data, telemetry)
+    assert res.overall_verdict == VerdictStatus.HALAL
+    assert len(res.ingredients) == 2
+    for item in res.ingredients:
+        assert item.status == VerdictStatus.HALAL
+        assert item.is_flagged is False
+        assert "Unlisted / Standard Ingredient" in item.reason
+
+
+def test_prohibited_keywords_classification():
+    """Verify explicit porcine or alcohol ingredients are classified as HARAM."""
+    telemetry = {
+        "model_used": "test-model",
+        "processing_time_ms": 50,
+        "image_width": 800,
+        "image_height": 600,
+        "groq_fallback_triggered": False
+    }
+    vision_data = {
+        "is_valid_label": True,
+        "product_name": "Savory Snack",
+        "brand": "SnackCorp",
+        "ingredients": ["Corn Meal", "Smoked Pork Flavoring", "Vegetable Oil"],
+        "detected_certifications": []
+    }
+    res = audit_compliance(vision_data, telemetry)
+    assert res.overall_verdict == VerdictStatus.HARAM
+    assert res.verdict_color == "#DC2626"
+    assert any("pork" in item.name.lower() and item.status == VerdictStatus.HARAM for item in res.ingredients)
+
+
+def test_api_audit_rejects_non_food_image(monkeypatch):
+    """Verify non-food image (is_valid_label=False) returns HTTP 422 with clean error message."""
+    async def mock_extract(bytes_):
+        return {
+            "is_valid_label": False,
+            "error_message": "No food ingredient panel or E-codes detected. Please capture a clear photo of the packaging label.",
+            "product_name": None,
+            "brand": None,
+            "ingredients": [],
+            "detected_certifications": []
+        }, {
+            "model_used": "mock-vision",
+            "processing_time_ms": 40,
+            "image_width": 400,
+            "image_height": 300,
+            "groq_fallback_triggered": False
+        }
+
+    monkeypatch.setattr("backend.main.extract_packaging_data", mock_extract)
+
+    img = Image.new("RGB", (400, 300), color=(100, 200, 100))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_bytes = buf.getvalue()
+
+    response = client.post(
+        "/api/audit",
+        files={"file": ("room_photo.jpg", img_bytes, "image/jpeg")}
+    )
+    assert response.status_code == 422
+    data = response.json()
+    assert "No food ingredient panel or E-codes detected" in data["detail"]
+
+
+def test_api_audit_rejects_empty_ingredients(monkeypatch):
+    """Verify that an image with no extracted ingredients also returns HTTP 422."""
+    async def mock_extract(bytes_):
+        return {
+            "is_valid_label": True,
+            "error_message": None,
+            "product_name": "Empty Box",
+            "brand": None,
+            "ingredients": [],
+            "detected_certifications": []
+        }, {
+            "model_used": "mock-vision",
+            "processing_time_ms": 40,
+            "image_width": 400,
+            "image_height": 300,
+            "groq_fallback_triggered": False
+        }
+
+    monkeypatch.setattr("backend.main.extract_packaging_data", mock_extract)
+
+    img = Image.new("RGB", (400, 300), color=(100, 200, 100))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_bytes = buf.getvalue()
+
+    response = client.post(
+        "/api/audit",
+        files={"file": ("empty_label.jpg", img_bytes, "image/jpeg")}
+    )
+    assert response.status_code == 422
+
+
+def test_api_audit_endpoint_valid(monkeypatch):
+    """Test POST /api/audit with a valid genuine food packaging image."""
+    async def mock_extract(bytes_):
+        return {
+            "is_valid_label": True,
+            "error_message": None,
+            "product_name": "Artisan Biscuits",
+            "brand": "SweetBake",
+            "ingredients": ["Wheat Flour", "Sugar", "Emulsifier (E471)", "Salt"],
+            "detected_certifications": []
+        }, {
+            "model_used": "gemini-3.5-flash-lite",
+            "processing_time_ms": 320,
+            "image_width": 800,
+            "image_height": 600,
+            "groq_fallback_triggered": True
+        }
+
+    monkeypatch.setattr("backend.main.extract_packaging_data", mock_extract)
+
     img = Image.new("RGB", (400, 300), color=(100, 200, 100))
     buf = io.BytesIO()
     img.save(buf, format="JPEG")
@@ -159,12 +290,12 @@ def test_api_audit_endpoint_valid():
     )
     assert response.status_code == 200
     data = response.json()
-    assert "product_name" in data
-    assert "overall_verdict" in data
-    assert data["verdict_color"] in ["#059669", "#DC2626", "#D97706", "#64748B"]
-    assert "inquiry_email" in data
-    assert "inquiry_tweet" in data
+    assert data["product_name"] == "Artisan Biscuits"
+    assert data["overall_verdict"] == "MUSHBOOH"
+    assert data["verdict_color"] == "#D97706"
+    assert "E471" in data["inquiry_email"]
     assert "metadata" in data
+    assert data["metadata"]["model_used"] == "gemini-3.5-flash-lite"
 
 
 def test_api_ecode_lookup():
