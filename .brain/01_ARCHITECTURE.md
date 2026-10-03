@@ -84,7 +84,11 @@ TaqwaLens is structured as a decoupled, high-performance monorepo/polyrepo archi
 - **Client-Side Compression (`lib/compressor.ts`):**
   - Canvas-based image resizer downsampling images before network dispatch (max dimension 1024px, JPEG/WebP 85% quality).
 - **Interactive Result Breakdown (`components/audit/VerdictCard.tsx`):**
-  - Badge with verdict color (`#10B981` Halal, `#EF4444` Haram, `#F59E0B` Mushbooh).
+  - Badge with refined verdict color:
+    * `HALAL`: Refined Emerald (`#059669`)
+    * `MUSHBOOH`: Warm Honey Amber (`#D97706`)
+    * `HARAM`: Muted Crimson (`#DC2626`)
+    * `NEEDS_REVIEW`: Deep Slate (`#64748B`)
   - Expandable ingredient accordion detailing source origin, Halal certification status, and Madhhab/Fiqh notes.
 - **1-Click Brand Inquiry Drawer (`components/inquiry/InquiryDrawer.tsx`):**
   - Sliding side-drawer triggered for products with `MUSHBOOH` status.
@@ -93,11 +97,45 @@ TaqwaLens is structured as a decoupled, high-performance monorepo/polyrepo archi
 
 ---
 
-## 3. Resilience & Fallback Matrix
+## 3. Enterprise Design System Directives (Anti-Cliché Standards)
+
+- **Aesthetic Benchmark:** Clean, institutional, modern fintech/healthtech (inspired by Linear and Stripe).
+- **Anti-Cliché Policy:** STRICTLY NO purple/violet gradients, neon blur spheres, floating cartoon icons, or generic "AI glow" templates.
+- **Surface & Hierarchy:** Deep neutral slate palette (`slate-950` `#020617`, `slate-900` `#0F172A`), high-contrast crisp text (`slate-50` / `slate-200`), hairline precision borders (`slate-800` `#1E293B`).
+- **3D & Animation Standards:** Subtle, purposeful micro-interactions (perspective hover tilt, precision border sheen, laser scanning grid), never noisy or distracting.
+
+---
+
+## 4. Backend Security & Defensive Architecture
+
+- **File Upload Integrity & Magic Bytes:**
+  - Validates incoming image streams using Pillow header parsing and byte inspection.
+  - Allowed image formats: `JPEG`, `PNG`, `WEBP`. Rejects disguised binaries, shell scripts, or polyglots with `400 Bad Request`.
+- **Payload Size Enforcement:**
+  - Maximum upload ceiling: `10MB` (`10,485,760` bytes).
+  - Requests exceeding 10MB are immediately rejected with `413 Payload Too Large` to prevent memory exhaustion / DoS attacks.
+- **Error Masking & Information Sanitization:**
+  - Zero traceback or internal stack trace leakage in API responses.
+  - All errors return structured JSON envelopes: `{"error": "...", "detail": "...", "status_code": ...}`.
+- **API Key Shielding:**
+  - Groq and Gemini API keys are strictly confined to server-side memory (`os.getenv`), never surfaced to the browser or embedded in client bundles.
+- **CORS & Defensive Headers Middleware:**
+  - Strict CORS origin whitelisting: `http://localhost:3000` and `http://127.0.0.1:3000` (wildcards prohibited).
+  - Mandatory HTTP response headers on every route:
+    * `X-Content-Type-Options: nosniff`
+    * `X-Frame-Options: DENY`
+    * `X-XSS-Protection: 1; mode=block`
+    * `Referrer-Policy: strict-origin-when-cross-origin`
+
+---
+
+## 5. Resilience & Fallback Matrix
 
 | Condition | Primary Behavior | Fallback Action | Status Code to Client |
 | :--- | :--- | :--- | :--- |
 | **Normal Operation** | Groq Llama 3.2 Vision completes in ~900ms | Inactive | `200 OK` (Metadata: `model_used="groq-llama-3.2-11b-vision-preview"`) |
+| **Payload > 10MB** | Rejected at gateway/middleware | None | `413 Payload Too Large` |
+| **Corrupted/Fake Image** | Rejected by byte validator | None | `400 Bad Request` |
 | **Groq 429 Rate Limit** | Groq raises `RateLimitError` | Seamlessly dispatches image to Gemini 1.5 Flash | `200 OK` (Metadata: `model_used="gemini-1.5-flash"`) |
 | **Groq Timeout (>6s)** | `asyncio.wait_for` triggers TimeoutError | Dispatches to Gemini 1.5 Flash | `200 OK` (Metadata: `model_used="gemini-1.5-flash"`) |
 | **Both APIs Fail** | Error caught | Fallback to Local OCR + Direct E-Code Dictionary lookup | `200 OK` (Partial) / `503 Service Unavailable` |

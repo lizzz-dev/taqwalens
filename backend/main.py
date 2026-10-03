@@ -1,0 +1,275 @@
+"""
+TaqwaLens Backend API — Production-Grade & Enterprise Security Hardened
+Exposes:
+- POST /api/audit (multipart/form-data packaging image audit with 10MB limit & magic bytes check)
+- GET /health and GET /api/health (service health, database stats, and key status without secret leakage)
+- GET /api/ecode/{code} (direct E-code lookup)
+"""
+
+import io
+import logging
+import os
+import sys
+from pathlib import Path
+from typing import Optional
+from PIL import Image
+
+# Ensure project root is in sys.path
+root_dir = Path(__file__).resolve().parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from backend.data.additives_db import get_total_count, lookup_additive
+from backend.models.schemas import AdditiveDetail, AuditResponse, VerdictStatus
+from backend.services.engine import audit_compliance
+from backend.services.vision import extract_packaging_data
+
+# Load environment configuration
+load_dotenv()
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("taqwalens.api")
+
+# Maximum payload size: 10 Megabytes (10 * 1024 * 1024)
+MAX_PAYLOAD_SIZE = 10 * 1024 * 1024
+
+app = FastAPI(
+    title="TaqwaLens Enterprise Compliance API",
+    description="Production-Grade Agentic Food Ingredient & E-Code Compliance Auditor",
+    version="1.0.0"
+)
+
+# -------------------------------------------------------------
+# 1. Strict CORS Whitelisting (No Wildcards in Production)
+# -------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
+
+# -------------------------------------------------------------
+# 2. Defensive Security Headers Middleware
+# -------------------------------------------------------------
+@app.middleware("http")
+async def apply_security_headers(request: Request, call_next):
+    # Enforce request payload size early if Content-Length is sent
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_PAYLOAD_SIZE:
+        return JSONResponse(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            content={
+                "error": "Payload Too Large",
+                "detail": "Request payload exceeds the maximum 10MB ceiling.",
+                "status_code": 413
+            }
+        )
+
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
+# -------------------------------------------------------------
+# 3. Error Masking & Confidential Exception Handlers
+# -------------------------------------------------------------
+@app.exception_handler(HTTPException)
+async def http_exception_envelope(request: Request, exc: HTTPException):
+    """Sanitized envelope for expected HTTP errors."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": "Client Request Error",
+            "detail": exc.detail,
+            "status_code": exc.status_code
+        }
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_envelope(request: Request, exc: RequestValidationError):
+    """Sanitized envelope for schema validation failures."""
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "Unprocessable Entity",
+            "detail": "Invalid request schema or malformed parameters.",
+            "status_code": 422
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_envelope(request: Request, exc: Exception):
+    """Prevent internal stack traces or library dumps from leaking to clients."""
+    logger.exception(f"Unhandled server exception: {exc}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Internal Server Error",
+            "detail": "An internal error occurred while executing the compliance audit. No system traces are exposed.",
+            "status_code": 500
+        }
+    )
+
+
+# -------------------------------------------------------------
+# 4. Image Stream & Magic Bytes Validator
+# -------------------------------------------------------------
+def validate_image_stream(data: bytes) -> str:
+    """
+    Validates magic bytes and runs Pillow image header parsing
+    to guarantee genuine image streams and reject disguised executables/scripts.
+    Returns: verified format string ('JPEG', 'PNG', 'WEBP').
+    """
+    if len(data) < 12:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is too small to constitute a valid image stream."
+        )
+
+    # Magic byte inspection
+    is_jpeg = data.startswith(b"\xff\xd8\xff")
+    is_png = data.startswith(b"\x89PNG\r\n\x1a\n")
+    is_webp = data.startswith(b"RIFF") and data[8:12] == b"WEBP"
+
+    if not (is_jpeg or is_png or is_webp):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image signature. Only genuine JPEG, PNG, and WEBP formats are accepted."
+        )
+
+    # Pillow integrity verification
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            img.verify()
+            fmt = img.format
+            if fmt not in ("JPEG", "PNG", "WEBP"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported image format: {fmt}. Only JPEG, PNG, and WEBP are accepted."
+                )
+            return fmt
+    except HTTPException:
+        raise
+    except Exception as err:
+        logger.warning(f"Pillow image verification failed: {err}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File integrity check failed. The file is corrupted or not a valid image."
+        )
+
+
+# -------------------------------------------------------------
+# 5. API Endpoints
+# -------------------------------------------------------------
+@app.get("/health", tags=["System"])
+@app.get("/api/health", tags=["System"])
+async def health_check():
+    """
+    Health check endpoint reporting API readiness without exposing
+    raw keys or internal secrets.
+    """
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+
+    return {
+        "status": "healthy",
+        "service": "TaqwaLens Enterprise Compliance API",
+        "version": "1.0.0",
+        "groq_configured": bool(groq_key and "your_groq_api_key_here" not in groq_key),
+        "gemini_configured": bool(gemini_key and "your_gemini_api_key_here" not in gemini_key),
+        "total_additives_indexed": get_total_count()
+    }
+
+
+@app.get("/api/ecode/{code}", response_model=AdditiveDetail, tags=["Additives"])
+async def get_additive_detail(code: str):
+    """Direct dictionary lookup for an E-number or additive name."""
+    detail = lookup_additive(code)
+    if not detail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Additive or E-number '{code}' not found in compliance database."
+        )
+
+    status_enum = VerdictStatus.MUSHBOOH
+    if "HALAL" in detail.get("status", "").upper():
+        status_enum = VerdictStatus.HALAL
+    elif "HARAM" in detail.get("status", "").upper():
+        status_enum = VerdictStatus.HARAM
+
+    return AdditiveDetail(
+        code=detail.get("code", code.upper()),
+        name=detail.get("name", code),
+        category=detail.get("category", "Food Additive"),
+        status=status_enum,
+        source=detail.get("origins", ["unknown"])[0],
+        description=detail.get("concern", ""),
+        fiqh_notes=detail.get("concern", ""),
+        reference_authority=detail.get("standards_ref", "Halal Standard Index")
+    )
+
+
+@app.post("/api/audit", response_model=AuditResponse, tags=["Audit"])
+async def audit_product_image(file: UploadFile = File(...)):
+    """
+    Submit a packaging image for compliance auditing.
+    Enforces:
+    - 10MB payload ceiling (HTTP 413)
+    - Magic bytes & Pillow integrity verification (HTTP 400)
+    - Server-side auto-compression <= 1024x1024
+    - Groq Vision primary with Gemini Flash fallback
+    - Non-fatwa educational disclaimer
+    """
+    # 1. Read up to 10MB + 1 byte to check size without loading unbounded data
+    chunk = await file.read(MAX_PAYLOAD_SIZE + 1)
+    if len(chunk) > MAX_PAYLOAD_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Uploaded image exceeds the maximum permitted ceiling of 10MB."
+        )
+
+    if len(chunk) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty image payload received."
+        )
+
+    # 2. Strict Magic Bytes & Pillow integrity validation
+    verified_fmt = validate_image_stream(chunk)
+    logger.info(f"Verified image upload '{file.filename}' format: {verified_fmt}, size: {len(chunk)} bytes")
+
+    # 3. Execute vision analysis (auto-compression & Groq -> Gemini fallback)
+    parsed_vision_data, telemetry = await extract_packaging_data(chunk)
+
+    # 4. Synthesize compliance verdict and inquiry drafts
+    audit_result = audit_compliance(parsed_vision_data, telemetry)
+    logger.info(f"Audit completed: '{audit_result.product_name}' -> {audit_result.overall_verdict} ({telemetry['model_used']})")
+
+    return audit_result
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

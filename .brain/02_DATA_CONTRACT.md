@@ -84,7 +84,7 @@ class AuditResponse(BaseModel):
     product_name: str = Field(description="Extracted or inferred product name from packaging")
     brand: Optional[str] = Field(default=None, description="Identified manufacturer or brand")
     overall_verdict: VerdictStatus = Field(description="Aggregate compliance verdict")
-    verdict_color: str = Field(description="Hex color code (#10B981, #EF4444, #F59E0B, #6B7280)")
+    verdict_color: str = Field(description="Hex color code (#059669 Halal, #DC2626 Haram, #D97706 Mushbooh, #64748B Needs Review)")
     verdict_summary: str = Field(description="2-3 sentence executive summary explaining the verdict")
     detected_certifications: List[str] = Field(default_factory=list, description="List of recognized Halal logos (e.g. ['JAKIM', 'IFANCA'])")
     ingredients: List[IngredientItem] = Field(description="Comprehensive list of parsed ingredients")
@@ -152,7 +152,7 @@ export interface AuditResponse {
   product_name: string;
   brand?: string;
   overall_verdict: VerdictStatus;
-  verdict_color: string; // e.g. '#10B981' | '#EF4444' | '#F59E0B' | '#6B7280'
+  verdict_color: string; // '#059669' (Halal) | '#DC2626' (Haram) | '#D97706' (Mushbooh) | '#64748B' (Needs Review)
   verdict_summary: string;
   detected_certifications: string[];
   ingredients: IngredientItem[];
@@ -174,7 +174,7 @@ export interface AuditResponse {
   "product_name": "Crispy Cocoa Cream Filled Biscuits",
   "brand": "Delice Bakery",
   "overall_verdict": "MUSHBOOH",
-  "verdict_color": "#F59E0B",
+  "verdict_color": "#D97706",
   "verdict_summary": "Product contains Mono- and Diglycerides of Fatty Acids (E471) without plant-origin specification, alongside Whey Powder of unknown rennet origin. No certified Halal logo was detected.",
   "detected_certifications": [],
   "ingredients": [

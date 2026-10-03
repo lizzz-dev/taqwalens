@@ -1,3 +1,5 @@
+
+
 # TaqwaLens — Implementation Task Ledger
 
 **Document ID:** `03_TASK_LEDGER.md`  
@@ -8,54 +10,47 @@
 
 ## Phase 1: Backend & Core Compliance Engine
 
-- [ ] **1.1 Backend Environment Setup**
-  - [ ] Initialize Python virtual environment (`venv`) inside `backend/`.
-  - [ ] Configure `requirements.txt` with: `fastapi`, `uvicorn[standard]`, `groq`, `google-genai`, `pillow`, `pydantic>=2.0`, `python-dotenv`, `python-multipart`, `pytest`, `httpx`.
-  - [ ] Configure settings loader reading `GROQ_API_KEY` and `GEMINI_API_KEY` from root `.env`.
+- [x] **1.1 Backend Environment Setup**
+  - [x] Initialize Python virtual environment (`venv`) inside `backend/`.
+  - [x] Configure `requirements.txt` with: `fastapi`, `uvicorn[standard]`, `groq`, `google-genai`, `pillow`, `pydantic>=2.0`, `python-dotenv`, `python-multipart`, `pytest`, `httpx`.
+  - [x] Configure settings loader reading `GROQ_API_KEY` and `GEMINI_API_KEY` from root `.env`.
 
-- [ ] **1.2 350+ E-Code Knowledge Base & Fiqh Engine**
-  - [ ] Curate and build `backend/app/data/ecodes.json` covering 350+ international food additives:
-    - E100–E199: Food Colors (e.g. E100 Curcumin, E120 Carmine, E150 Caramel).
-    - E200–E299: Preservatives (e.g. E211 Sodium Benzoate, E250 Sodium Nitrite).
-    - E300–E399: Antioxidants & Acidity Regulators (e.g. E300 Ascorbic Acid, E322 Lecithin).
-    - E400–E499: Thickeners, Stabilizers & Emulsifiers (e.g. E412 Guar Gum, E441 Gelatine, E471 Mono/diglycerides).
-    - E500–E599: Anti-caking agents & Acidity regulators (e.g. E542 Bone Phosphate).
-    - E600–E699: Flavor enhancers (e.g. E621 MSG, E631 Disodium Inosinate).
-    - E900–E999: Glazing agents & Sweeteners (e.g. E901 Beeswax, E904 Shellac, E920 L-Cysteine).
-  - [ ] Implement `ecode_engine.py`: fast Trie / regex lookup handling international notations (`E471`, `E-471`, `INS 471`, `471`).
+- [x] **1.2 350+ E-Code Knowledge Base & Fiqh Engine**
+  - [x] Curate and build `backend/data/additives_db.py` covering 350+ international food additives (E100–E1520) and critical non-E-code food ingredients (gelatin, carmine, rennet, pepsin, whey, shellac, l-cysteine, etc.).
+  - [x] Implement fuzzy normalization and lookup handling international notations (`E-471`, `E 471`, `INS 471`, `471`, and chemical synonyms).
 
-- [ ] **1.3 Image Preprocessing & Auto-Compression Pipeline**
-  - [ ] Implement `image_processor.py` using Pillow:
+- [x] **1.3 Image Preprocessing & Auto-Compression Pipeline**
+  - [x] Implement `preprocess_image` in `backend/services/vision.py` using Pillow:
     - Downsample high-res inputs exceeding $1024 \times 1024$ preserving aspect ratio.
     - Normalize color profiles (RGBA/CMYK $\to$ RGB).
-    - Compress to high-efficiency WebP/JPEG (target quality 85).
+    - Compress to high-efficiency JPEG (target quality 85).
     - Base64 encoding pipeline for Groq & Gemini payloads.
 
-- [ ] **1.4 Dual-Engine Vision & Automated Fallback Pipeline**
-  - [ ] Implement `groq_service.py`:
+- [x] **1.4 Dual-Engine Vision & Automated Fallback Pipeline**
+  - [x] Implement `call_groq_vision`:
     - Model: `llama-3.2-11b-vision-preview`.
     - High-precision prompt tuned for ingredient extraction, E-code detection, and Halal certification badge spotting.
     - Strict schema enforcement via JSON mode.
-  - [ ] Implement `gemini_service.py`:
-    - Model: `gemini-1.5-flash`.
+  - [x] Implement `call_gemini_vision`:
+    - Model: `gemini-1.5-flash` with Google GenAI SDK and REST fallback.
     - Identical prompt & structured response contract.
-  - [ ] Implement `vision_controller.py`:
+  - [x] Implement `extract_packaging_data`:
     - Primary execution against Groq.
-    - Automatic circuit breaker / fallback on HTTP 429, timeouts (>6s), or 5xx errors to Gemini 1.5 Flash.
+    - Automatic fallback on HTTP 429, timeouts, or exceptions to Gemini 1.5 Flash.
     - Telemetry tracking (`model_used`, `processing_time_ms`, `groq_fallback_triggered`).
 
-- [ ] **1.5 Compliance Auditor & Inquiry Generator**
-  - [ ] Cross-match extracted ingredients against `ecodes.json`.
-  - [ ] Determine aggregate verdict (`HALAL`, `HARAM`, `MUSHBOOH`, `NEEDS_REVIEW`).
-  - [ ] Auto-compose 1-Click Brand Inquiries:
+- [x] **1.5 Compliance Auditor & Inquiry Generator**
+  - [x] Cross-match extracted ingredients against `additives_db.py`.
+  - [x] Determine aggregate verdict (`HALAL`, `HARAM`, `MUSHBOOH`, `NEEDS_REVIEW`) and verdict labels/colors.
+  - [x] Auto-compose 1-Click Brand Inquiries:
     - Formal customer care email draft targeting ambiguous items.
     - X/Twitter post draft under 280 characters with relevant tags and hashtags.
 
-- [ ] **1.6 FastAPI Endpoints & Validation Suite**
-  - [ ] `POST /api/audit`: Multipart file upload and JSON base64 support.
-  - [ ] `GET /api/ecode/{code}`: Quick lookup endpoint for specific additive.
-  - [ ] `GET /api/health`: Health status reporting API key configuration & database statistics.
-  - [ ] Unit & integration test suite verifying failover, parsing, and data contracts.
+- [x] **1.6 FastAPI Endpoints & Validation Suite**
+  - [x] `POST /api/audit`: Multipart image file upload returning exact `AuditResponse` schema.
+  - [x] `GET /api/ecode/{code}`: Quick lookup endpoint for specific additive.
+  - [x] `GET /health` & `GET /api/health`: Health status reporting API key configuration & database statistics.
+  - [x] Unit & integration test suite (`backend/tests/test_backend.py`) — 8 tests passing.
 
 ---
 

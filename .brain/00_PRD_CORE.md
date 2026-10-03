@@ -36,10 +36,10 @@ When an ingredient origin is ambiguous or doubtful, TaqwaLens activates its **1-
 
 ### 2.3 Verdict & Transparency Engine
 - **Overall Verdict:** 
-  - `HALAL` (Green `#10B981`)
-  - `HARAM` (Red `#EF4444`)
-  - `MUSHBOOH` (Amber `#F59E0B`)
-  - `NEEDS_REVIEW` (Slate `#6B7280`)
+  - `HALAL` (Refined Emerald `#059669`)
+  - `HARAM` (Muted Crimson `#DC2626`)
+  - `MUSHBOOH` (Warm Honey Amber `#D97706`)
+  - `NEEDS_REVIEW` (Deep Slate `#64748B`)
 - **Itemized Breakdown:** Every single ingredient is itemized with status, biological/chemical source, and specific fiqh rationale.
 
 ---
@@ -72,34 +72,70 @@ Whenever a product or ingredient is classified as **Mushbooh** (Doubtful) due to
 
 ---
 
-## 5. User Persona & Success Metrics
+## 5. Enterprise Design System Rules (Anti-Cliché Directive)
+
+To ensure TaqwaLens feels like a production-grade, institutional compliance auditor rather than a generic hackathon AI template, the following design system rules are non-negotiable:
+
+### 5.1 Visual Aesthetic & Philosophy
+- **Anti-Cliché Policy:** STRICTLY NO purple/violet gradients, neon blur spheres, floating cartoon icons, or generic "AI glow" backdrops.
+- **Design Benchmark:** Clean, institutional, modern fintech/healthtech (e.g. Linear, Stripe, Raycast).
+- **Surface & Backgrounds:** Deep neutral slate palette (`slate-950` `#020617`, `slate-900` `#0F172A`), high-contrast crisp text (`slate-50` / `slate-200`), and hairline precision borders (`slate-800` `#1E293B`).
+- **Functional Semantic Accents:**
+  - **Halal:** Refined Emerald (`#059669` / `emerald-600`)
+  - **Mushbooh:** Warm Honey Amber (`#D97706` / `amber-600`)
+  - **Haram:** Muted Crimson (`#DC2626` / `red-600`)
+  - **Needs Review:** Deep Slate (`#64748B` / `slate-500`)
+- **3D & Animation Standards:** Subtle, precise micro-interactions only (subtle perspective tilt, precision border sheen, clean loading skeletons, laser reticle alignment). No noisy floating 3D widgets.
+
+---
+
+## 6. Defensive Security & Production-Grade Standards
+
+### 6.1 Upload & File Integrity Validation
+- **Magic Bytes & Header Inspection:** Every uploaded file must be inspected using Pillow and magic byte verification to ensure it is a genuine, uncorrupted image stream (`JPEG`, `PNG`, `WEBP`). Disguised executables, shell scripts, or polyglot files are strictly rejected before processing.
+- **Payload Size Limits:** Strictly enforce a 10MB maximum request ceiling (`10 * 1024 * 1024` bytes). Any file or payload exceeding 10MB is rejected with `HTTP 413 Payload Too Large`.
+
+### 6.2 Error Masking & Confidentiality
+- **No Traceback Leakage:** Internal Python exceptions, stack traces, and library logs must never be exposed to the client. All error paths return sanitized JSON envelopes (`{"error": "...", "code": ...}`).
+- **API Key Shielding:** All Groq and Gemini API keys remain strictly server-side. No client-side exposure.
+
+### 6.3 Network & Browser Security Headers
+- **Strict CORS Policy:** Restricted strictly to authorized origins (`http://localhost:3000`, `http://127.0.0.1:3000`). No wildcard `*` in production configurations.
+- **Defensive Headers:** Automatically inject `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin` on all API responses.
+
+---
+
+## 7. User Persona & Success Metrics
 
 | Metric | Target |
 | :--- | :--- |
 | **End-to-End Processing Time (Groq)** | $< 1,800\text{ ms}$ |
 | **Failover Handshake Latency (Gemini)** | $< 2,500\text{ ms}$ |
+| **Max Payload Ceiling** | $\le 10\text{ MB}$ (Hard 413 boundary) |
 | **Image Compression Efficiency** | $\ge 70\%$ payload reduction with zero OCR accuracy loss |
 | **E-Code Knowledge Base Coverage** | 350+ Additives with full Fiqh metadata |
 | **Verdict Accuracy** | $> 99.2\%$ agreement against verified Halal certification indices |
 
 ---
 
-## 6. Architecture & System Scope
+## 8. Architecture & System Scope
 
 ```
 +-------------------------------------------------------------+
 |                     Next.js 14 App Router                   |
-|  - 3D Interactive Scanner (Three.js / React Three Fiber)    |
+|  - Precision Scanner (Linear/Stripe-grade minimal UI)       |
 |  - Real-Time Camera / Upload & Auto-Compress (1024x1024)    |
 |  - Ingredient Breakdown Cards & Fiqh Explanations           |
 |  - 1-Click Brand Inquiry Drawer (Email / Tweet)             |
 +------------------------------+------------------------------+
-                               | REST API (JSON / Multipart)
+                               | REST API (Strict CORS, Max 10MB)
                                v
 +-------------------------------------------------------------+
 |                     FastAPI Backend (8000)                  |
+|  - Security Middleware: Magic bytes, 10MB cap, nosniff      |
 |  - Vision Controller: Groq Llama 3.2 11B -> Gemini Flash    |
 |  - 350+ E-Code Fiqh Knowledge Base & Regex Normalizer       |
 |  - Structured Compliance Auditor & Inquiry Generator        |
 +-------------------------------------------------------------+
 ```
+
