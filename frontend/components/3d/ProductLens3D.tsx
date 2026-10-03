@@ -323,16 +323,6 @@ export function ProductLens3D() {
 
       {/* 3D Canvas Mount */}
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing touch-pan-y" />
-
-      {/* Aesthetic Overlay Badge */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/85 border border-[#EAE6DF] text-[11px] sm:text-xs text-[#1E3A2F] backdrop-blur-md shadow-2xs">
-        <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-        <span className="font-medium tracking-tight">Interactive 3D Inspector</span>
-      </div>
-
-      <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 text-[10px] sm:text-[11px] text-[#78716C] bg-white/75 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-[#EAE6DF]/70 backdrop-blur-sm pointer-events-none">
-        Hover / drag to rotate
-      </div>
     </div>
   );
 }

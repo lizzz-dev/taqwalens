@@ -25,7 +25,11 @@ export const metadata: Metadata = {
   description:
     "Automated, production-grade compliance verification for food packaging labels and E-numbers powered by Groq Llama 3.2 Vision, Gemini 1.5 Flash, and OpenFoodFacts.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/icon.svg",
   },
   appleWebApp: {
     capable: true,

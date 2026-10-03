@@ -3,6 +3,7 @@
 import React from "react";
 import { ShieldCheck, Sparkles, BookOpen, Clock, ChevronDown, Scale } from "lucide-react";
 import { MadhhabProfile } from "../lib/types";
+import { Logo3D } from "./3d/Logo3D";
 
 interface NavbarProps {
   isBackendHealthy: boolean;
@@ -27,15 +28,14 @@ export function Navbar({
         {/* Brand Logo & Editorial Title */}
         <div className="flex items-center justify-between sm:justify-start gap-3.5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#1E3A2F] flex items-center justify-center text-[#F7F4EE] shadow-xs shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#CBE0D4]" />
-            </div>
+            <Logo3D className="w-9 h-9 sm:w-10 sm:h-10" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-serif font-bold text-[#1C1917] tracking-tight text-xl sm:text-2xl">
                   TaqwaLens
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F0F5F2] border border-[#CBE0D4] text-[#1E3A2F]">
+                <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-[#1E3A2F] to-[#2D5A46] text-[#F7F4EE] shadow-2xs border border-[#D4AF37]/30 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" />
                   Verified
                 </span>
               </div>
