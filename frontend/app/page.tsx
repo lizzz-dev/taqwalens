@@ -1,15 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { Navbar } from "../components/Navbar";
 import { Scanner } from "../components/Scanner";
 import { ProductLens3D } from "../components/3d/ProductLens3D";
-
-const PlayfulCompanion = dynamic(
-  () => import("../components/3d/PlayfulCompanion").then((mod) => mod.PlayfulCompanion),
-  { ssr: false }
-);
 import { VerdictCard } from "../components/VerdictCard";
 import { IngredientGrid } from "../components/IngredientGrid";
 import { InquiryDrawer } from "../components/InquiryDrawer";
@@ -570,7 +564,7 @@ export default function Home() {
         {/* ------------------------------------------------------------- */}
         {/* BALANCED SIDE-BY-SIDE INTERACTIVE PRODUCT STUDIO              */}
         {/* ------------------------------------------------------------- */}
-        <section className="pt-6 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+        <section className="pt-6 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* LEFT COLUMN (Desktop col-span-7 / col-span-6):
               Primary Interactive Terminal: Badge, Headline, Scanner Bay, and Live Audit Results */}
           <div className="lg:col-span-7 flex flex-col items-start space-y-6 w-full">
@@ -680,26 +674,20 @@ export default function Home() {
 
           {/* RIGHT COLUMN (Desktop col-span-5 / col-span-6):
               TOP: Fixed-height 3D Spline/Three.js Packaging Model (unchanged, not shrunk)
-              MIDDLE: Instant Test Lab Presets (1-Click Demo)
-              BOTTOM: Interactive 3D Playful Companion / Anti-Stress Fidget Widget */}
-          <div className="lg:col-span-5 flex flex-col space-y-6 w-full h-full">
+              BOTTOM: Instant Test Lab Presets (1-Click Demo) in the empty space directly beneath 3D model */}
+          <div className="lg:col-span-5 flex flex-col space-y-6 w-full lg:sticky lg:top-20">
             {/* TOP: Fixed-Height 3D Packaging Model */}
-            <div className="w-full shrink-0">
+            <div className="w-full">
               <ProductLens3D />
             </div>
 
-            {/* MIDDLE: Instant Test Lab Presets (1-Click Demo) */}
-            <div className="w-full shrink-0">
+            {/* BOTTOM: Instant Test Lab Presets (1-Click Demo) */}
+            <div className="w-full">
               <DemoPresetsTray
                 onSelectPreset={handleSelectDemoPreset}
                 selectedPresetId={selectedPresetId}
                 isLoading={isLoading}
               />
-            </div>
-
-            {/* BOTTOM: Interactive 3D Playful Companion / Anti-Stress Fidget Widget */}
-            <div className="w-full flex-1 min-h-[220px] flex flex-col">
-              <PlayfulCompanion />
             </div>
           </div>
         </section>
