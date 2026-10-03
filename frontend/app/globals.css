@@ -22,3 +22,16 @@ body {
   background-color: #E2ECE6;
   color: #1E3A2F;
 }
+
+/* Hide Next.js Dev Indicator & Overlay Badge */
+nextjs-portal,
+#nextjs-dev-indicator,
+[data-nextjs-dev-indicator],
+[data-nextjs-toast],
+div[data-nextjs-dev-tools-button],
+button[aria-label*="Next.js"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
