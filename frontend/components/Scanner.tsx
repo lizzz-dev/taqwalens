@@ -131,53 +131,60 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
 
   return (
     <div className="w-full rounded-2xl bg-white border border-[#EAE6DF] p-4 sm:p-7 space-y-5 shadow-sm hover:shadow-md transition-shadow">
-      {/* Scanner Header & Pill Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F0EBE1] pb-4">
-        <div>
-          <h2 className="font-serif font-bold text-lg text-[#1C1917] tracking-tight">
-            Package Scanner
-          </h2>
-          <p className="text-xs text-[#78716C] mt-0.5">
-            Capture or upload a clear photo of the ingredient statement
-          </p>
-        </div>
+      {/* Scanner Header */}
+      <div className="border-b border-[#F0EBE1] pb-3">
+        <h2 className="font-serif font-bold text-xl text-[#1C1917] tracking-tight">
+          Package & Barcode Scanner
+        </h2>
+        <p className="text-xs text-[#78716C] mt-0.5">
+          {activeTab === "upload"
+            ? "Upload a clear photo of product packaging or ingredient list"
+            : activeTab === "camera"
+            ? "Point your camera directly at the ingredient panel or nutrition box"
+            : "Lookup products directly via international UPC/EAN food registry"}
+        </p>
+      </div>
 
-        {/* Clean Pill Tab Switcher */}
-        <div className="inline-flex rounded-full bg-[#FAF8F5] border border-[#EAE6DF] p-1 text-xs self-start sm:self-auto overflow-x-auto max-w-full">
-          <button
-            onClick={() => setActiveTab("upload")}
-            className={`px-3 sm:px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 font-medium whitespace-nowrap min-h-[38px] ${
-              activeTab === "upload"
-                ? "bg-[#1E3A2F] text-white shadow-xs"
-                : "text-[#78716C] hover:text-[#1C1917]"
-            }`}
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Upload Photo</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("camera")}
-            className={`px-3 sm:px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 font-medium whitespace-nowrap min-h-[38px] ${
-              activeTab === "camera"
-                ? "bg-[#1E3A2F] text-white shadow-xs"
-                : "text-[#78716C] hover:text-[#1C1917]"
-            }`}
-          >
-            <Camera className="w-3.5 h-3.5" />
-            <span>Live Camera</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("barcode")}
-            className={`px-3 sm:px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 font-medium whitespace-nowrap min-h-[38px] ${
-              activeTab === "barcode"
-                ? "bg-[#1E3A2F] text-white shadow-xs"
-                : "text-[#78716C] hover:text-[#1C1917]"
-            }`}
-          >
-            <Barcode className="w-3.5 h-3.5" />
-            <span>Barcode / UPC</span>
-          </button>
-        </div>
+      {/* Prominent Full-Width Segmented Tab Switcher (No Horizontal Scrollbar, 100% Visible) */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#FAF8F5] border border-[#EAE6DF] shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab("upload")}
+          className={`w-full py-2 px-2 sm:px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold min-h-[42px] ${
+            activeTab === "upload"
+              ? "bg-[#1E3A2F] text-white shadow-xs"
+              : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
+          }`}
+        >
+          <Upload className="w-4 h-4 shrink-0" />
+          <span className="truncate">Photo Upload</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("camera")}
+          className={`w-full py-2 px-2 sm:px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold min-h-[42px] ${
+            activeTab === "camera"
+              ? "bg-[#1E3A2F] text-white shadow-xs"
+              : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
+          }`}
+        >
+          <Camera className="w-4 h-4 shrink-0" />
+          <span className="truncate">Live Camera</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("barcode")}
+          className={`w-full py-2 px-2 sm:px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold min-h-[42px] ${
+            activeTab === "barcode"
+              ? "bg-[#1E3A2F] text-white shadow-xs"
+              : "text-[#57534E] hover:text-[#1C1917] hover:bg-white"
+          }`}
+        >
+          <Barcode className="w-4 h-4 shrink-0" />
+          <span className="truncate">Barcode / UPC</span>
+        </button>
       </div>
 
       {cameraError && activeTab === "camera" && (
