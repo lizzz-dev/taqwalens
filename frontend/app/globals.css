@@ -43,48 +43,48 @@ button[aria-label*="Next.js"] {
 /* Ambient Glass Caustics Keyframes */
 @keyframes aura-float-1 {
   0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
   33% {
-    transform: translate3d(50px, -40px, 0) scale(1.08);
+    transform: translate3d(90px, -70px, 0) scale(1.18) rotate(4deg);
   }
   66% {
-    transform: translate3d(-35px, 30px, 0) scale(0.94);
+    transform: translate3d(-70px, 60px, 0) scale(0.92) rotate(-3deg);
   }
 }
 
 @keyframes aura-float-2 {
   0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
   33% {
-    transform: translate3d(-55px, 45px, 0) scale(0.95);
+    transform: translate3d(-95px, 80px, 0) scale(0.9) rotate(-5deg);
   }
   66% {
-    transform: translate3d(40px, -30px, 0) scale(1.07);
+    transform: translate3d(85px, -65px, 0) scale(1.15) rotate(4deg);
   }
 }
 
 @keyframes aura-float-3 {
   0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
   50% {
-    transform: translate3d(35px, 50px, 0) scale(1.12);
+    transform: translate3d(70px, 90px, 0) scale(1.22) rotate(6deg);
   }
 }
 
 .animate-aura-1 {
-  animation: aura-float-1 22s ease-in-out infinite;
+  animation: aura-float-1 18s ease-in-out infinite;
   will-change: transform;
 }
 
 .animate-aura-2 {
-  animation: aura-float-2 26s ease-in-out infinite;
+  animation: aura-float-2 22s ease-in-out infinite;
   will-change: transform;
 }
 
 .animate-aura-3 {
-  animation: aura-float-3 20s ease-in-out infinite;
+  animation: aura-float-3 16s ease-in-out infinite;
   will-change: transform;
 }

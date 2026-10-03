@@ -57,7 +57,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} min-h-full bg-[#FAF8F5] text-[#1C1917] font-sans antialiased overflow-x-hidden selection:bg-[#E2ECE6] selection:text-[#1E3A2F] relative`}
       >
         <AmbientGlassAura />
-        {children}
+        <div className="relative z-10 min-h-full flex flex-col">{children}</div>
       </body>
     </html>
   );

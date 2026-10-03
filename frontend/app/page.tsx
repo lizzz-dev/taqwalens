@@ -355,7 +355,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917] flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-[#1C1917] flex flex-col relative overflow-x-hidden">
       {/* Editorial Navbar with Madhhab Profile Selector & History Drawer Trigger */}
       <Navbar
         isBackendHealthy={isBackendHealthy}
