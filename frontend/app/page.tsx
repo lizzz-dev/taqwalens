@@ -1,9 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Navbar } from "../components/Navbar";
 import { Scanner } from "../components/Scanner";
 import { ProductLens3D } from "../components/3d/ProductLens3D";
+
+const PlayfulCompanion = dynamic(
+  () => import("../components/3d/PlayfulCompanion").then((mod) => mod.PlayfulCompanion),
+  { ssr: false }
+);
 import { VerdictCard } from "../components/VerdictCard";
 import { IngredientGrid } from "../components/IngredientGrid";
 import { InquiryDrawer } from "../components/InquiryDrawer";
@@ -717,6 +723,13 @@ export default function Home() {
             <IngredientGrid ingredients={auditResult.ingredients} />
           </section>
         )}
+
+        {/* Interactive 3D Playful Companion / Fidget Widget (Above Dietary Notice) */}
+        <div className="max-w-7xl mx-auto px-6 pt-4 pb-6 w-full">
+          <div className="w-full max-w-4xl mx-auto h-[300px] sm:h-[340px]">
+            <PlayfulCompanion />
+          </div>
+        </div>
 
         {/* Authoritative Educational Notice */}
         <div className="max-w-7xl mx-auto px-6 pb-12">
