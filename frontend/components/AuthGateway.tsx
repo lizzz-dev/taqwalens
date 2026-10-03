@@ -17,7 +17,6 @@ import {
   ArrowRight,
   Shield,
   Layers,
-  Barcode,
   Award,
 } from "lucide-react";
 
@@ -214,12 +213,6 @@ export function AuthGateway({ onAuthenticate, onContinueAsGuest }: AuthGatewayPr
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Interactive 3D Holographic Stage */}
           <div className="lg:col-span-6 flex flex-col items-center text-center lg:text-left order-2 lg:order-1">
-            {/* Editorial Introduction */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1E3A2F]/10 border border-[#1E3A2F]/20 text-[#1E3A2F] text-xs font-semibold mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Next-Gen AI Halal Verification Gateway</span>
-            </div>
-
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1C1917] leading-[1.15] mb-4">
               Step Into the Future of{" "}
               <span className="text-[#1E3A2F] italic">Halal Intelligence</span>
@@ -238,27 +231,6 @@ export function AuthGateway({ onAuthenticate, onContinueAsGuest }: AuthGatewayPr
                 madhhab={previewMadhhab}
                 className="w-full h-[360px] sm:h-[420px]"
               />
-            </div>
-
-            {/* 3 Value Pillars */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-lg mt-4 text-left">
-              <div className="p-3 rounded-2xl bg-white/80 border border-[#EAE6DF] shadow-2xs">
-                <ShieldCheck className="w-4 h-4 text-[#1E3A2F] mb-1.5" />
-                <h4 className="text-xs font-bold text-[#1C1917]">Zero Hallucination</h4>
-                <p className="text-[10px] text-[#78716C] mt-0.5">Strict database cross-validation</p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-white/80 border border-[#EAE6DF] shadow-2xs">
-                <Scale className="w-4 h-4 text-[#D4AF37] mb-1.5" />
-                <h4 className="text-xs font-bold text-[#1C1917]">4 Juristic Schools</h4>
-                <p className="text-[10px] text-[#78716C] mt-0.5">Hanafi, Shafi'i & Wara'</p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-white/80 border border-[#EAE6DF] shadow-2xs">
-                <Barcode className="w-4 h-4 text-[#1E3A2F] mb-1.5" />
-                <h4 className="text-xs font-bold text-[#1C1917]">Global Barcodes</h4>
-                <p className="text-[10px] text-[#78716C] mt-0.5">Over 3M+ packaged items</p>
-              </div>
             </div>
           </div>
 
