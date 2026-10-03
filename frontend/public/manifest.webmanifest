@@ -1,0 +1,20 @@
+{
+  "name": "TaqwaLens — Halal Food & Ingredient Auditor",
+  "short_name": "TaqwaLens",
+  "description": "Deterministic Halal food compliance verification with cross-madhhab fiqh intelligence and E-number auditing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#1E3A2F",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle", "utilities"]
+}

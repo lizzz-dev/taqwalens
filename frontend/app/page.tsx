@@ -12,9 +12,13 @@ import { HistoryDrawer } from "../components/HistoryDrawer";
 import { PrintCertificateModal } from "../components/PrintCertificateModal";
 import { QuickSearchModal } from "../components/QuickSearchModal";
 import { AuthGateway } from "../components/AuthGateway";
+import { DemoPresetsTray, DemoPreset } from "../components/DemoPresetsTray";
+import { AskSheikhAI } from "../components/AskSheikhAI";
+import { ProductComparisonModal } from "../components/ProductComparisonModal";
+import { soundManager } from "../lib/soundEffects";
 import { auditProductImage, auditProductBarcode, checkBackendHealth } from "../lib/api";
 import { AuditResponse, HistoryItem, MadhhabProfile, UserProfile } from "../lib/types";
-import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert, Award, Barcode } from "lucide-react";
+import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert, Award, Barcode, ArrowRightLeft } from "lucide-react";
 
 export default function Home() {
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
@@ -30,6 +34,8 @@ export default function Home() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isCertificateOpen, setIsCertificateOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
   // User Authentication & 3D Welcome Gateway State
   // ROLLBACK TOGGLE: set ENABLE_AUTH_GATEWAY = false to bypass the gateway anytime
@@ -231,6 +237,14 @@ export default function Home() {
       setAuditResult(result);
       persistAuditToHistory(result, "image");
 
+      if (result.overall_verdict === "HALAL") {
+        soundManager.playHalalChime();
+      } else if (result.overall_verdict === "MUSHBOOH") {
+        soundManager.playMushboohTone();
+      } else if (result.overall_verdict === "HARAM") {
+        soundManager.playHaramTone();
+      }
+
       // Scroll smoothly down to findings
       setTimeout(() => {
         const findingsEl = document.getElementById("audit-findings");
@@ -264,6 +278,14 @@ export default function Home() {
       setAuditResult(result);
       persistAuditToHistory(result, "barcode", barcode);
 
+      if (result.overall_verdict === "HALAL") {
+        soundManager.playHalalChime();
+      } else if (result.overall_verdict === "MUSHBOOH") {
+        soundManager.playMushboohTone();
+      } else if (result.overall_verdict === "HARAM") {
+        soundManager.playHaramTone();
+      }
+
       setTimeout(() => {
         const findingsEl = document.getElementById("audit-findings");
         if (findingsEl) {
@@ -276,6 +298,75 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSelectDemoPreset = async (preset: DemoPreset) => {
+    setSelectedPresetId(preset.id);
+    setIsLoading(true);
+    setAuditResult(null);
+    setErrorMessage(null);
+    setStatusText(`Auditing sample ${preset.name}...`);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 520;
+    const ctx = canvas.getContext("2d");
+
+    if (ctx) {
+      ctx.fillStyle = "#FAF8F5";
+      ctx.fillRect(0, 0, 800, 520);
+
+      ctx.strokeStyle = "#EAE6DF";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, 780, 500);
+
+      ctx.fillStyle = "#1E3A2F";
+      ctx.font = "bold 28px serif";
+      ctx.fillText(preset.name.toUpperCase(), 40, 65);
+
+      ctx.fillStyle = "#78716C";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(`Brand: ${preset.brand} • Category: ${preset.category}`, 40, 95);
+
+      ctx.fillStyle = "#1C1917";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText("INGREDIENTS DECLARATION:", 40, 140);
+
+      ctx.font = "14px sans-serif";
+      ctx.fillStyle = "#292524";
+
+      const words = preset.ingredientsText.split(" ");
+      let line = "";
+      let y = 170;
+      for (const word of words) {
+        const testLine = line + word + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 700) {
+          ctx.fillText(line, 40, y);
+          line = word + " ";
+          y += 24;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 40, y);
+
+      if (preset.verdictType === "HALAL") {
+        ctx.fillStyle = "#059669";
+        ctx.font = "bold 16px sans-serif";
+        ctx.fillText("CERTIFIED HALAL • JAKIM / MUI ACCREDITED", 40, 480);
+      }
+    }
+
+    canvas.toBlob(
+      async (blob) => {
+        if (blob) {
+          await handleScan(blob);
+        }
+      },
+      "image/jpeg",
+      0.95
+    );
   };
 
   // Demo presets: Render genuine, high-contrast packaging labels onto canvas
@@ -421,6 +512,7 @@ export default function Home() {
         historyCount={recentScans.length}
         onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenCompare={() => setIsCompareOpen(true)}
         selectedMadhhab={selectedMadhhab}
         onChangeMadhhab={(m) => setSelectedMadhhab(m)}
         currentUser={currentUser}
@@ -476,50 +568,11 @@ export default function Home() {
               statusText={statusText}
             />
 
-            {/* Warm Real-World Example Chips */}
-            <div className="p-4 rounded-2xl border border-[#EAE6DF] bg-white shadow-2xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-[#78716C]">
-                <span className="font-medium text-[#1C1917] flex items-center gap-1.5">
-                  Try real-world packaging samples:
-                </span>
-                <span className="text-[11px] text-[#A8A29E]">1-Click Verification</span>
-              </div>
-
-              <div className="flex flex-wrap gap-2 text-xs">
-                <button
-                  onClick={() => handleLoadDemoPreset("mushbooh")}
-                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#F5DEB3] bg-[#FCF7ED] text-[#B45309] hover:bg-[#FDF3DE] hover:border-[#E9C77B] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
-                >
-                  <span>British Biscuit (E471)</span>
-                  <ArrowRight className="w-3 h-3 opacity-60" />
-                </button>
-
-                <button
-                  onClick={() => handleLoadDemoPreset("haram")}
-                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FEE2E2] hover:border-[#FCA5A5] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
-                >
-                  <span>Gummy Candy (E120)</span>
-                  <ArrowRight className="w-3 h-3 opacity-60" />
-                </button>
-
-                <button
-                  onClick={() => handleLoadDemoPreset("halal")}
-                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#CBE0D4] bg-[#F0F5F2] text-[#1E3A2F] hover:bg-[#E3EFE8] hover:border-[#A3CCB3] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
-                >
-                  <span>Imported Noodles (Halal)</span>
-                  <ArrowRight className="w-3 h-3 opacity-60" />
-                </button>
-
-                <button
-                  onClick={() => handleLoadDemoPreset("invalid")}
-                  className="px-3 sm:px-3.5 py-2 rounded-full border border-[#EAE6DF] bg-[#FAF8F5] text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] hover:border-[#D6D0C4] transition-all flex items-center gap-1.5 font-medium shadow-2xs active:scale-95 min-h-[38px]"
-                  title="Verify anti-hallucination rejection on non-food image"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-[#C28E38]" />
-                  <span>Invalid Photo (Guard Test)</span>
-                </button>
-              </div>
-            </div>
+            {/* 1-Click Interactive Test Lab Presets Tray */}
+            <DemoPresetsTray
+              onSelectPreset={handleSelectDemoPreset}
+              selectedPresetId={selectedPresetId}
+            />
           </div>
 
           {/* RIGHT PANEL: Interactive 3D Packaging & Magnifying TaqwaLens (Cols 7-12) */}
@@ -576,6 +629,18 @@ export default function Home() {
               <InquiryDrawer audit={auditResult} />
             )}
 
+            {/* Ask Sheikh AI Interactive Juristic Assistant */}
+            <AskSheikhAI
+              productName={auditResult.product_name || "Food Item"}
+              verdict={auditResult.overall_verdict}
+              additives={auditResult.flagged_items.map((item) => ({
+                code: item.additive_detail?.code || item.name,
+                name: item.name,
+                halal_status: item.status,
+              }))}
+              madhhab={selectedMadhhab}
+            />
+
             {/* Detailed Ingredient Breakdown Grid */}
             <IngredientGrid ingredients={auditResult.ingredients} />
           </section>
@@ -616,6 +681,13 @@ export default function Home() {
       <QuickSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
+      />
+
+      {/* Side-by-Side Product Comparison Modal */}
+      <ProductComparisonModal
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        currentAuditResult={auditResult}
       />
     </div>
   );

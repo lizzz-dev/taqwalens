@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Camera, Upload, RefreshCw, AlertCircle, Sparkles, Barcode, ArrowRight, PackageCheck, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { soundManager } from "../lib/soundEffects";
 
 interface ScannerProps {
   onScan: (file: File | Blob) => void;
@@ -61,6 +62,7 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
 
   const handleCaptureFrame = () => {
     if (!videoRef.current) return;
+    soundManager.playShutter();
     const video = videoRef.current;
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth || 1280;
@@ -91,6 +93,7 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
       alert("File size exceeds 10MB. Please select a smaller photo.");
       return;
     }
+    soundManager.playClick();
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     onScan(file);
@@ -106,6 +109,7 @@ export function Scanner({ onScan, onBarcodeScan, isLoading, statusText }: Scanne
 
   const handleBarcodeSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    soundManager.playClick();
     setBarcodeError(null);
     const clean = barcodeInput.trim().replace(/[-\s]/g, "");
     if (!clean) {

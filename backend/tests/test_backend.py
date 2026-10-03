@@ -380,3 +380,21 @@ def test_api_barcode_endpoint(monkeypatch):
     assert data["overall_verdict"] in ["HALAL", "MUSHBOOH"]
     assert "Wheat (Gluten)" in data["allergens_detected"]
     assert "Soy" in data["allergens_detected"]
+
+
+def test_ask_fiqh_endpoint():
+    """Test POST /api/ask-fiqh interactive juristic Q&A."""
+    payload = {
+        "question": "Why is E471 doubtful in this snack?",
+        "product_name": "British Biscuits",
+        "verdict": "MUSHBOOH",
+        "additives": [{"code": "E471", "name": "Mono- and diglycerides", "halal_status": "MUSHBOOH"}],
+        "madhhab": "hanafi"
+    }
+    res = client.post("/api/ask-fiqh", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "answer" in data
+    assert "model_used" in data
+    assert "E471" in data["answer"]
+

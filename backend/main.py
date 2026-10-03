@@ -11,7 +11,8 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
 from PIL import Image
 
 # Ensure project root is in sys.path
@@ -383,6 +384,31 @@ async def audit_product_barcode(upc: str, madhhab: Optional[str] = "standard"):
     audit_result = audit_compliance(parsed_data, telemetry, madhhab=madhhab or "standard")
     logger.info(f"Barcode audit completed: '{clean_upc}' ({product_name}) -> {audit_result.overall_verdict}")
     return audit_result
+
+
+class FiqhQuestionRequest(BaseModel):
+    question: str = Field(..., min_length=2, max_length=500)
+    product_name: Optional[str] = "Inspected Food Item"
+    verdict: Optional[str] = "Mushbooh"
+    additives: Optional[List[Dict[str, Any]]] = []
+    madhhab: Optional[str] = "standard"
+
+
+@app.post("/api/ask-fiqh")
+async def ask_fiqh_advisor(payload: FiqhQuestionRequest):
+    """
+    Ask Sheikh AI: Interactive juristic advisor providing contextual guidance,
+    madhhab nuances, and halal product alternatives.
+    """
+    from backend.services.fiqh_chat import answer_fiqh_question
+    result = await answer_fiqh_question(
+        question=payload.question,
+        product_name=payload.product_name or "Food Item",
+        verdict=payload.verdict or "Mushbooh",
+        additives=payload.additives or [],
+        madhhab=payload.madhhab or "standard"
+    )
+    return result
 
 
 if __name__ == "__main__":

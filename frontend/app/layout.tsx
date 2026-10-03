@@ -39,12 +39,15 @@ export const metadata: Metadata = {
     ],
     apple: "/icon.svg",
   },
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "TaqwaLens",
   },
 };
+
+import { PWAInstallBanner } from "../components/PWAInstallBanner";
 
 export default function RootLayout({
   children,
@@ -58,6 +61,7 @@ export default function RootLayout({
       >
         <AmbientGlassAura />
         <div className="relative z-10 min-h-full flex flex-col">{children}</div>
+        <PWAInstallBanner />
       </body>
     </html>
   );

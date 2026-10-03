@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { Search, Clock, Scale, User, LogOut } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Search, Clock, Scale, User, LogOut, ArrowRightLeft, Volume2, VolumeX } from "lucide-react";
 import { MadhhabProfile, UserProfile } from "../lib/types";
 import { Logo3D } from "./3d/Logo3D";
+import { soundManager } from "../lib/soundEffects";
 
 interface NavbarProps {
   isBackendHealthy?: boolean;
@@ -11,6 +12,7 @@ interface NavbarProps {
   historyCount?: number;
   onOpenHistory?: () => void;
   onOpenSearch?: () => void;
+  onOpenCompare?: () => void;
   selectedMadhhab?: MadhhabProfile;
   onChangeMadhhab?: (m: MadhhabProfile) => void;
   currentUser?: UserProfile | null;
@@ -21,11 +23,22 @@ export function Navbar({
   historyCount = 0,
   onOpenHistory,
   onOpenSearch,
+  onOpenCompare,
   selectedMadhhab = "standard",
   onChangeMadhhab,
   currentUser,
   onOpenAuthGateway,
 }: NavbarProps) {
+  const [isSoundOn, setIsSoundOn] = useState(true);
+
+  useEffect(() => {
+    setIsSoundOn(soundManager.getSoundEnabled());
+  }, []);
+
+  const handleToggleSound = () => {
+    const nextState = soundManager.toggleSound();
+    setIsSoundOn(nextState);
+  };
   // Global Ctrl+K / Cmd+K listener for instant search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,12 +71,34 @@ export function Navbar({
             </div>
           </div>
 
-          {/* Mobile Actions: Search & History */}
-          <div className="sm:hidden flex items-center gap-2">
+          {/* Mobile Actions: Compare, Sound, Search & History */}
+          <div className="sm:hidden flex items-center gap-1.5">
+            <button
+              onClick={handleToggleSound}
+              className="p-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] shadow-2xs active:scale-95 min-h-[38px] min-w-[38px] flex items-center justify-center"
+              title={isSoundOn ? "Mute Sound Effects" : "Enable Sound Effects"}
+            >
+              {isSoundOn ? (
+                <Volume2 className="w-4 h-4 text-[#1E3A2F]" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-[#A8A29E]" />
+              )}
+            </button>
+
+            {onOpenCompare && (
+              <button
+                onClick={onOpenCompare}
+                className="p-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] shadow-2xs active:scale-95 min-h-[38px] min-w-[38px] flex items-center justify-center"
+                title="Compare Products Side-by-Side"
+              >
+                <ArrowRightLeft className="w-4 h-4 text-[#1E3A2F]" />
+              </button>
+            )}
+
             {onOpenSearch && (
               <button
                 onClick={onOpenSearch}
-                className="p-2.5 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] shadow-2xs active:scale-95 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                className="p-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] shadow-2xs active:scale-95 min-h-[38px] min-w-[38px] flex items-center justify-center"
                 title="Search E-codes"
               >
                 <Search className="w-4 h-4 text-[#1E3A2F]" />
@@ -73,7 +108,7 @@ export function Navbar({
             {onOpenHistory && (
               <button
                 onClick={onOpenHistory}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-[#EAE6DF] text-xs font-medium text-[#1C1917] shadow-2xs active:scale-95 min-h-[40px]"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white border border-[#EAE6DF] text-xs font-medium text-[#1C1917] shadow-2xs active:scale-95 min-h-[38px]"
               >
                 <Clock className="w-3.5 h-3.5 text-[#1E3A2F]" />
                 <span>History</span>
@@ -83,7 +118,7 @@ export function Navbar({
             {onOpenAuthGateway && (
               <button
                 onClick={onOpenAuthGateway}
-                className="w-10 h-10 rounded-full bg-[#1E3A2F] text-[#D4AF37] font-serif text-xs font-bold flex items-center justify-center border border-[#D4AF37]/50 shadow-2xs active:scale-95"
+                className="w-9 h-9 rounded-full bg-[#1E3A2F] text-[#D4AF37] font-serif text-xs font-bold flex items-center justify-center border border-[#D4AF37]/50 shadow-2xs active:scale-95"
                 title="Switch Auditor Profile or Sign Out"
               >
                 {currentUser?.avatarInitials || "TL"}
@@ -92,8 +127,20 @@ export function Navbar({
           </div>
         </div>
 
-        {/* Desktop Controls: Instant Additive Search, Fiqh Profile Selector, History Drawer, User Profile */}
-        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 text-xs">
+        {/* Desktop Controls: Compare, Instant Search, Madhhab Selector, History, Audio, Profile */}
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-2.5 text-xs">
+          {/* Compare Products Button */}
+          {onOpenCompare && (
+            <button
+              onClick={onOpenCompare}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-[#EAE6DF] text-xs font-medium text-[#1C1917] hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/40 transition-colors shadow-2xs active:scale-95 min-h-[40px]"
+              title="Compare 2 products side-by-side"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 text-[#1E3A2F]" />
+              <span>Compare ⚖️</span>
+            </button>
+          )}
+
           {/* Instant E-Code Search Button */}
           {onOpenSearch && (
             <button
@@ -141,6 +188,19 @@ export function Navbar({
               <span>Recent History</span>
             </button>
           )}
+
+          {/* Tactile Audio Mute/Unmute Toggle Button */}
+          <button
+            onClick={handleToggleSound}
+            className="p-2.5 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/40 shadow-2xs transition-all active:scale-95 min-h-[40px] min-w-[40px] flex items-center justify-center"
+            title={isSoundOn ? "Sound Effects: ON (Click to Mute)" : "Sound Effects: MUTED (Click to Enable)"}
+          >
+            {isSoundOn ? (
+              <Volume2 className="w-4 h-4 text-[#1E3A2F]" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-[#A8A29E]" />
+            )}
+          </button>
 
           {/* Auditor Profile Chip / Switch Profile Button */}
           {onOpenAuthGateway && (
