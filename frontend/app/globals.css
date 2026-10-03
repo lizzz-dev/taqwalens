@@ -10,6 +10,10 @@
   --amber-warm: #C28E38;
 }
 
+.font-serif {
+  font-family: var(--font-serif), Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

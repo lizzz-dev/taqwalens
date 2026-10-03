@@ -10,6 +10,7 @@ import { InquiryDrawer } from "../components/InquiryDrawer";
 import { Disclaimer } from "../components/Disclaimer";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { PrintCertificateModal } from "../components/PrintCertificateModal";
+import { QuickSearchModal } from "../components/QuickSearchModal";
 import { auditProductImage, auditProductBarcode, checkBackendHealth } from "../lib/api";
 import { AuditResponse, HistoryItem, MadhhabProfile } from "../lib/types";
 import { AlertCircle, X, ShieldCheck, ArrowRight, Sparkles, BookOpen, Clock, ShieldAlert, Award, Barcode } from "lucide-react";
@@ -27,6 +28,7 @@ export default function Home() {
   const [recentScans, setRecentScans] = useState<HistoryItem[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isCertificateOpen, setIsCertificateOpen] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   // Load scan history from localStorage on client mount
   useEffect(() => {
@@ -300,6 +302,7 @@ export default function Home() {
         indexedCount={indexedCount}
         historyCount={recentScans.length}
         onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenSearch={() => setIsSearchOpen(true)}
         selectedMadhhab={selectedMadhhab}
         onChangeMadhhab={(m) => setSelectedMadhhab(m)}
       />
@@ -517,6 +520,12 @@ export default function Home() {
           audit={auditResult}
         />
       )}
+
+      {/* Instant E-Code & Additive Quick Search Encyclopedia Modal */}
+      <QuickSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </div>
   );
 }

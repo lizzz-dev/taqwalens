@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { CheckCircle2, AlertTriangle, XCircle, HelpCircle, ShieldCheck, Sparkles, Clock, Award, FileText, Scale } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, HelpCircle, ShieldCheck, Sparkles, Clock, Award, Share2, Check, Scale } from "lucide-react";
 import { AuditResponse, VerdictStatus } from "../lib/types";
 import { formatTime } from "../lib/utils";
 
@@ -13,6 +13,7 @@ interface VerdictCardProps {
 
 export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   // 3D subtle card tilt
   const x = useMotionValue(0);
@@ -38,6 +39,13 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
     y.set(0);
   };
 
+  const handleCopySummary = () => {
+    const text = `TaqwaLens Compliance Audit\nProduct: ${audit.product_name} (${audit.brand || "Unspecified"})\nVerdict: ${audit.overall_verdict}\nJuristic Profile: ${audit.madhhab_profile || "Standard Consensus"}\nFindings: ${audit.verdict_summary}\nVerified via TaqwaLens Halal Intelligence`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const getVerdictConfig = (status: VerdictStatus) => {
     switch (status) {
       case "HALAL":
@@ -49,6 +57,8 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
           badgeBorder: "border-[#CBE0D4]",
           cardBorder: "border-[#CBE0D4]",
           accentDot: "bg-[#22C55E]",
+          score: 100,
+          scoreColor: "#059669",
         };
       case "HARAM":
         return {
@@ -59,6 +69,8 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
           badgeBorder: "border-[#FECACA]",
           cardBorder: "border-[#FECACA]",
           accentDot: "bg-[#EF4444]",
+          score: 0,
+          scoreColor: "#DC2626",
         };
       case "MUSHBOOH":
         return {
@@ -69,6 +81,8 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
           badgeBorder: "border-[#F5DEB3]",
           cardBorder: "border-[#F5DEB3]",
           accentDot: "bg-[#F59E0B]",
+          score: 55,
+          scoreColor: "#D97706",
         };
       default:
         return {
@@ -79,12 +93,19 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
           badgeBorder: "border-[#EAE6DF]",
           cardBorder: "border-[#EAE6DF]",
           accentDot: "bg-[#A8A29E]",
+          score: 50,
+          scoreColor: "#64748B",
         };
     }
   };
 
   const config = getVerdictConfig(audit.overall_verdict);
   const StatusIcon = config.icon;
+
+  // SVG Radial Score Ring values
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (config.score / 100) * circumference;
 
   return (
     <div style={{ perspective: "1000px" }} className="w-full">
@@ -129,8 +150,47 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
               </h2>
             </div>
 
-            {/* Verdict Badge & Certificate Action */}
-            <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+            {/* Verdict Badge, Radial Confidence Ring & Actions */}
+            <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+              {/* Radial Confidence Meter */}
+              <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#EAE6DF] px-3 py-1.5 rounded-full shadow-2xs">
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  <svg className="w-8 h-8 -rotate-90">
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r={radius}
+                      stroke="#EAE6DF"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r={radius}
+                      stroke={config.scoreColor}
+                      strokeWidth="3"
+                      fill="none"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold font-mono text-[#1C1917]">
+                    {config.score}%
+                  </span>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[9px] uppercase tracking-wider text-[#A8A29E] font-semibold">
+                    Confidence
+                  </span>
+                  <span className="text-[11px] font-bold text-[#1C1917] leading-none">
+                    {config.score === 100 ? "Clear" : config.score === 0 ? "Blocked" : "Mixed"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Pill */}
               <div
                 className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full border ${config.badgeBorder} ${config.badgeBg} shadow-2xs`}
               >
@@ -141,10 +201,11 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
                 </span>
               </div>
 
+              {/* View Certificate Action */}
               {onOpenCertificate && (
                 <button
                   onClick={onOpenCertificate}
-                  className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-all shadow-2xs active:scale-95 min-h-[38px]"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-[#1E3A2F] text-white text-xs font-medium hover:bg-[#2D5A46] transition-all shadow-2xs active:scale-95 min-h-[38px]"
                   title="View formal compliance certificate and export PDF"
                 >
                   <Award className="w-3.5 h-3.5 text-[#CBE0D4]" />
@@ -190,7 +251,7 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
             </div>
           )}
 
-          {/* Customer-Centric Verification Bar */}
+          {/* Clean Customer-Centric Verification Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#F0EBE1] text-xs text-[#78716C]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="flex items-center gap-1.5">
@@ -204,9 +265,23 @@ export function VerdictCard({ audit, onOpenCertificate }: VerdictCardProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EAE6DF] text-[#78716C]">
-                Resolution: {audit.metadata.image_width}×{audit.metadata.image_height}
-              </span>
+              <button
+                onClick={handleCopySummary}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF8F5] border border-[#EAE6DF] hover:border-[#1E3A2F]/40 text-[#1C1917] hover:bg-[#F5F2EB] transition-all text-xs font-medium shadow-2xs active:scale-95"
+                title="Copy audit findings summary to clipboard"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#22C55E]" />
+                    <span className="text-[#1E3A2F]">Copied to Clipboard!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5 text-[#78716C]" />
+                    <span>Share Audit Summary</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
