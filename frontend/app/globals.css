@@ -88,3 +88,86 @@ button[aria-label*="Next.js"] {
   animation: aura-float-3 16s ease-in-out infinite;
   will-change: transform;
 }
+
+/* Print Isolation: When printing certificate, hide all page navigation, headers, footers, and main studio */
+@media print {
+  /* Hide the rest of the application */
+  header,
+  nav,
+  main,
+  footer,
+  aside,
+  #nextjs-dev-indicator,
+  nextjs-portal,
+  [aria-hidden="true"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body.printing-certificate header,
+  body.printing-certificate nav,
+  body.printing-certificate main,
+  body.printing-certificate footer {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1C1917 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #printable-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    inset: auto !important;
+    width: 100% !important;
+  }
+
+  #printable-certificate-card {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  #printable-certificate-body {
+    border: 3px double #1E3A2F !important;
+    margin: 0 !important;
+    padding: 20px 24px !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
+    page-break-inside: auto;
+  }
+
+  .print\:hidden,
+  .print-hidden,
+  button {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Force exact background colors and borders in PDF */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 10mm 12mm;
+  }
+}

@@ -16,6 +16,7 @@ import {
   Tag,
   Shield,
   Download,
+  FileText,
 } from "lucide-react";
 import { AuditResponse, VerdictStatus } from "../lib/types";
 import { formatTime } from "../lib/utils";
@@ -33,7 +34,6 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
   useEffect(() => {
     if (!isOpen) return;
 
-    // Lock background scrolling
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -44,9 +44,22 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
     };
     window.addEventListener("keydown", handleKeyDown);
 
+    const handleBeforePrint = () => {
+      document.body.classList.add("printing-certificate");
+    };
+    const handleAfterPrint = () => {
+      document.body.classList.remove("printing-certificate");
+    };
+
+    window.addEventListener("beforeprint", handleBeforePrint);
+    window.addEventListener("afterprint", handleAfterPrint);
+
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.body.classList.remove("printing-certificate");
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeprint", handleBeforePrint);
+      window.removeEventListener("afterprint", handleAfterPrint);
     };
   }, [isOpen, onClose]);
 
@@ -166,8 +179,51 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
 
   if (!isOpen) return null;
 
+  // Print isolation trigger
   const handlePrint = () => {
-    window.print();
+    document.body.classList.add("printing-certificate");
+    setTimeout(() => {
+      window.print();
+    }, 80);
+  };
+
+  // Direct standalone HTML download
+  const handleDownloadHtml = () => {
+    const contentEl = document.getElementById("printable-certificate-body");
+    if (!contentEl) return;
+
+    const certHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TaqwaLens Compliance Dossier - ${audit.product_name}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif; background: #ffffff; color: #1C1917; padding: 30px; max-width: 820px; margin: 0 auto; line-height: 1.5; }
+    .certificate-frame { border: 4px double #1E3A2F; padding: 32px; border-radius: 12px; background: #FCFBF8; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+    th, td { border: 1px solid #EAE6DF; padding: 10px 12px; text-align: left; }
+    th { background: #FAF8F5; color: #78716C; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: bold; }
+    .halal { background: #ECFDF5; color: #065F46; }
+    .haram { background: #FEF2F2; color: #991B1B; }
+    .mushbooh { background: #FFFBEB; color: #92400E; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="certificate-frame">
+    ${contentEl.innerHTML}
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([certHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `TaqwaLens_Dossier_${audit.product_name.replace(/[^a-zA-Z0-9]/g, "_")}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const getVerdictStamp = (status: VerdictStatus) => {
@@ -219,6 +275,7 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
   return (
     <AnimatePresence>
       <div
+        id="printable-modal-overlay"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -238,6 +295,7 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
 
         {/* Modal Window Card */}
         <motion.div
+          id="printable-certificate-card"
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
@@ -253,6 +311,17 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {/* Direct Save HTML Option */}
+              <button
+                onClick={handleDownloadHtml}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] text-xs font-medium hover:bg-[#FAF8F5] transition-all shadow-2xs active:scale-95 min-h-[38px]"
+                title="Download offline HTML dossier"
+              >
+                <Download className="w-3.5 h-3.5 text-[#1E3A2F]" />
+                <span>Save File</span>
+              </button>
+
+              {/* Primary Print / Save PDF Option */}
               <button
                 onClick={handlePrint}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1E3A2F] text-white text-xs font-bold hover:bg-[#2D5A46] transition-all shadow-sm active:scale-95 min-h-[38px]"
@@ -260,8 +329,10 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
               >
                 <Printer className="w-3.5 h-3.5 text-[#D4AF37]" />
                 <span className="hidden sm:inline">Download PDF / Print</span>
-                <span className="sm:hidden">Print PDF</span>
+                <span className="sm:hidden">PDF / Print</span>
               </button>
+
+              {/* Close Button */}
               <button
                 onClick={onClose}
                 className="p-2 rounded-full bg-white border border-[#EAE6DF] text-[#1C1917] hover:bg-[#FAF8F5] hover:border-[#1E3A2F]/40 transition-colors shadow-2xs active:scale-95 min-h-[38px] min-w-[38px] flex items-center justify-center"
@@ -273,7 +344,10 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
           </div>
 
           {/* Certificate Body (Printed Content) */}
-          <div className="p-5 sm:p-10 space-y-7 text-[#1C1917] bg-[#FCFBF8] border-8 border-double border-[#EAE6DF] m-3 sm:m-4 rounded-2xl print:m-0 print:border-4">
+          <div
+            id="printable-certificate-body"
+            className="p-5 sm:p-10 space-y-7 text-[#1C1917] bg-[#FCFBF8] border-8 border-double border-[#EAE6DF] m-3 sm:m-4 rounded-2xl print:m-0 print:border-4"
+          >
             {/* Header: Emblems, Title, and 3D Holographic Seal */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b-2 border-[#1E3A2F]/20 text-center sm:text-left">
               <div className="space-y-1.5">
@@ -294,15 +368,25 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
                 </div>
               </div>
 
-              {/* Interactive 3D Canvas Seal */}
+              {/* Interactive 3D Canvas Seal (and Vector Seal for Print) */}
               <div className="relative shrink-0 flex flex-col items-center">
                 <canvas
                   ref={sealCanvasRef}
                   width={150}
                   height={150}
-                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-md"
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-md print:hidden"
                 />
-                <span className="text-[10px] font-medium text-[#78716C] mt-1 font-mono tracking-tight">
+                {/* Clean Vector Gold Seal that is ALWAYS sharp in print */}
+                <div className="hidden print:flex w-24 h-24 rounded-full border-4 border-[#B38B26] bg-[#FCF9EE] items-center justify-center text-center p-2">
+                  <div className="w-20 h-20 rounded-full border-2 border-[#8A691E] flex flex-col items-center justify-center">
+                    <span className="text-[#1E3A2F] text-lg font-serif">✦</span>
+                    <span className="text-[8px] font-bold tracking-widest uppercase text-[#1E3A2F]">
+                      TAQWALENS
+                    </span>
+                    <span className="text-[7px] text-[#8A691E] font-semibold">VERIFIED</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-[#78716C] mt-1 font-mono tracking-tight print:hidden">
                   Crypto Holographic Seal
                 </span>
               </div>
@@ -456,6 +540,13 @@ export function PrintCertificateModal({ isOpen, onClose, audit }: PrintCertifica
               <span>Official Verified Fiqh Compliance Record</span>
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleDownloadHtml}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-white border border-[#EAE6DF] text-xs font-semibold text-[#1C1917] hover:bg-[#FAF8F5] transition-colors shadow-2xs active:scale-95 min-h-[40px]"
+              >
+                <Download className="w-3.5 h-3.5 text-[#1E3A2F]" />
+                <span>Save HTML</span>
+              </button>
               <button
                 onClick={handlePrint}
                 className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1E3A2F] text-white text-xs font-bold hover:bg-[#2D5A46] transition-colors shadow-sm active:scale-95 min-h-[40px]"
