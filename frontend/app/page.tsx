@@ -303,6 +303,7 @@ export default function Home() {
   const handleSelectDemoPreset = async (preset: DemoPreset) => {
     setSelectedPresetId(preset.id);
     setIsLoading(true);
+    setAuditResult(null);
     setErrorMessage(null);
     setStatusText(`Auditing sample ${preset.name}...`);
 
@@ -518,66 +519,69 @@ export default function Home() {
         onOpenAuthGateway={handleOpenAuthGateway}
       />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
+      <main className="relative z-10 flex-1 w-full space-y-8 sm:space-y-12">
         {/* Error Notification Toast */}
         {errorMessage && (
-          <div className="p-4 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] text-xs flex items-start justify-between gap-3 animate-in fade-in slide-in-from-top-2 shadow-sm">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-[#B91C1C] shrink-0" />
-              <span className="font-medium text-sm leading-normal">{errorMessage}</span>
+          <div className="max-w-7xl mx-auto px-6 pt-4">
+            <div className="p-4 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] text-xs flex items-start justify-between gap-3 animate-in fade-in slide-in-from-top-2 shadow-sm">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-[#B91C1C] shrink-0" />
+                <span className="font-medium text-sm leading-normal">{errorMessage}</span>
+              </div>
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="text-[#B91C1C] hover:text-[#7F1D1D] p-1 rounded-full hover:bg-white/50 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => setErrorMessage(null)}
-              className="text-[#B91C1C] hover:text-[#7F1D1D] p-1 rounded-full hover:bg-white/50 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
         )}
 
         {/* ------------------------------------------------------------- */}
         {/* WARM DUAL-PANEL PRODUCT STUDIO                                */}
         {/* ------------------------------------------------------------- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        <section className="pt-6 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* LEFT PANEL: Editorial Typography + Scanner Bay + Test Presets (Cols 1-6) */}
-          <div className="lg:col-span-6 space-y-6 sm:space-y-7">
+          <div className="lg:col-span-6 flex flex-col items-start">
             {/* Mindful Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F0F5F2] border border-[#CBE0D4] text-xs text-[#1E3A2F] font-medium shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#2D5A46]" />
+            <div className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 mb-5 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
               <span>Certified Islamic Dietary Standards</span>
             </div>
 
             {/* Studio Header Typography */}
-            <div className="space-y-3">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-[#1C1917] leading-[1.18]">
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-serif font-normal text-slate-900 leading-[1.15] tracking-tight">
                 Scan Ingredients. <br />
                 Verify Sourcing. <br />
                 <span className="text-[#1E3A2F]">Eat with Certainty.</span>
               </h1>
-              <p className="text-sm sm:text-base text-[#78716C] leading-relaxed font-normal max-w-xl">
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mt-4 mb-8">
                 Photograph any snack, beverage, or grocery label—or look up barcodes directly—to instantly detect hidden animal derivatives, E-codes, allergens, and verified Halal standards.
               </p>
             </div>
 
             {/* Inviting Package Scanner Card with Image & Barcode support */}
-            <Scanner
-              onScan={handleScan}
-              onBarcodeScan={handleBarcodeScan}
-              isLoading={isLoading}
-              statusText={statusText}
-            />
+            <div className="mt-8 space-y-6 w-full">
+              <Scanner
+                onScan={handleScan}
+                onBarcodeScan={handleBarcodeScan}
+                isLoading={isLoading}
+                statusText={statusText}
+              />
+
+              {/* 1-Click Interactive Test Lab Presets Tray */}
+              <DemoPresetsTray
+                onSelectPreset={handleSelectDemoPreset}
+                selectedPresetId={selectedPresetId}
+              />
+            </div>
           </div>
 
-          {/* RIGHT PANEL: Interactive 3D Packaging & 1-Click Demo Lab (Cols 7-12) */}
-          <div className="lg:col-span-6 space-y-4 flex flex-col justify-start">
+          {/* RIGHT PANEL: Interactive 3D Packaging & Magnifying TaqwaLens (Cols 7-12) */}
+          <div className="lg:col-span-6 flex flex-col justify-center">
             <ProductLens3D />
-
-            {/* 1-Click Interactive Test Lab Presets Tray (Positioned Beside Scanner) */}
-            <DemoPresetsTray
-              onSelectPreset={handleSelectDemoPreset}
-              selectedPresetId={selectedPresetId}
-              isLoading={isLoading}
-            />
           </div>
         </section>
 
@@ -585,7 +589,7 @@ export default function Home() {
         {/* AUDIT FINDINGS DOSSIER (Visible after audit completion)        */}
         {/* ------------------------------------------------------------- */}
         {auditResult && (
-          <section id="audit-findings" className="space-y-8 pt-8 sm:pt-10 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <section id="audit-findings" className="max-w-7xl mx-auto px-6 space-y-8 pt-8 sm:pt-10 border-t border-[#EAE6DF] animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-serif font-bold text-2xl text-[#1C1917]">
@@ -647,7 +651,9 @@ export default function Home() {
         )}
 
         {/* Authoritative Educational Notice */}
-        <Disclaimer />
+        <div className="max-w-7xl mx-auto px-6 pb-12">
+          <Disclaimer />
+        </div>
       </main>
 
       {/* Slide-over / Bottom-sheet Recent Scans History Drawer */}

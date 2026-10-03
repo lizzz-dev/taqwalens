@@ -317,7 +317,7 @@ export function ProductLens3D() {
   }, []);
 
   return (
-    <div className="relative w-full h-[200px] sm:h-[230px] lg:h-[250px] rounded-2xl bg-gradient-to-b from-[#F7F4EE] to-[#EFECE4] border border-[#EAE6DF] overflow-hidden flex items-center justify-center shadow-sm touch-pan-y">
+    <div className="relative w-full h-[280px] sm:h-[360px] lg:h-[440px] rounded-2xl bg-gradient-to-b from-[#F7F4EE] to-[#EFECE4] border border-[#EAE6DF] overflow-hidden flex items-center justify-center shadow-sm touch-pan-y">
       {/* Subtle ambient lens flare / glow behind carton */}
       <div className="absolute w-72 h-72 rounded-full bg-[#1E3A2F]/5 blur-3xl pointer-events-none" />
 
