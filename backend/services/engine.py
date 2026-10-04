@@ -7,17 +7,30 @@ determines overall compliance verdicts, and synthesizes 1-click brand inquiries.
 import logging
 from typing import Dict, List, Optional, Tuple
 
-from backend.data.additives_db import lookup_additive
-from backend.models.schemas import (
-    AdditiveDetail,
-    AuditMetadata,
-    AuditResponse,
-    IngredientItem,
-    IngredientSource,
-    InquiryDrafts,
-    InquiryEmailDraft,
-    VerdictStatus,
-)
+try:
+    from backend.data.additives_db import lookup_additive
+    from backend.models.schemas import (
+        AdditiveDetail,
+        AuditMetadata,
+        AuditResponse,
+        IngredientItem,
+        IngredientSource,
+        InquiryDrafts,
+        InquiryEmailDraft,
+        VerdictStatus,
+    )
+except ModuleNotFoundError:
+    from data.additives_db import lookup_additive
+    from models.schemas import (
+        AdditiveDetail,
+        AuditMetadata,
+        AuditResponse,
+        IngredientItem,
+        IngredientSource,
+        InquiryDrafts,
+        InquiryEmailDraft,
+        VerdictStatus,
+    )
 
 logger = logging.getLogger("taqwalens.engine")
 

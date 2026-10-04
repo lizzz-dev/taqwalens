@@ -15,10 +15,19 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from PIL import Image
 
-# Ensure project root is in sys.path
-root_dir = Path(__file__).resolve().parent.parent
-if str(root_dir) not in sys.path:
-    sys.path.insert(0, str(root_dir))
+# Ensure both current directory and parent directory are on sys.path
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
+for p in [str(current_dir), str(parent_dir)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+# Create a synthetic 'backend' package alias if running in isolated service root (Vercel Services)
+if "backend" not in sys.modules:
+    import types
+    _b_pkg = types.ModuleType("backend")
+    _b_pkg.__path__ = [str(current_dir)]
+    sys.modules["backend"] = _b_pkg
 
 import re
 import httpx
@@ -28,10 +37,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.data.additives_db import get_total_count, lookup_additive
-from backend.models.schemas import AdditiveDetail, AuditResponse, VerdictStatus
-from backend.services.engine import audit_compliance
-from backend.services.vision import extract_packaging_data
+try:
+    from backend.data.additives_db import get_total_count, lookup_additive
+    from backend.models.schemas import AdditiveDetail, AuditResponse, VerdictStatus
+    from backend.services.engine import audit_compliance
+    from backend.services.vision import extract_packaging_data
+except ModuleNotFoundError:
+    from data.additives_db import get_total_count, lookup_additive
+    from models.schemas import AdditiveDetail, AuditResponse, VerdictStatus
+    from services.engine import audit_compliance
+    from services.vision import extract_packaging_data
 
 # Load environment configuration
 load_dotenv()
@@ -213,6 +228,7 @@ async def health_check():
 
 
 @app.get("/api/ecode/{code}", response_model=AdditiveDetail, tags=["Additives"])
+@app.get("/ecode/{code}", response_model=AdditiveDetail, tags=["Additives"])
 async def get_additive_detail(code: str):
     """Direct dictionary lookup for an E-number or additive name."""
     detail = lookup_additive(code)
@@ -241,6 +257,7 @@ async def get_additive_detail(code: str):
 
 
 @app.post("/api/audit", response_model=AuditResponse, tags=["Audit"])
+@app.post("/audit", response_model=AuditResponse, tags=["Audit"])
 async def audit_product_image(
     file: UploadFile = File(...),
     madhhab: Optional[str] = Form("standard")
@@ -304,6 +321,7 @@ async def audit_product_image(
 
 
 @app.get("/api/barcode/{upc}", response_model=AuditResponse, tags=["Audit"])
+@app.get("/barcode/{upc}", response_model=AuditResponse, tags=["Audit"])
 async def audit_product_barcode(upc: str, madhhab: Optional[str] = "standard"):
     """
     Direct barcode lookup fallback against OpenFoodFacts API.
@@ -400,13 +418,20 @@ class FiqhQuestionRequest(BaseModel):
     madhhab: Optional[str] = "standard"
 
 
-@app.post("/api/ask-fiqh")
+@app.post("/api/ask-fiqh", tags=["Fiqh Assistant"])
+@app.post("/ask-fiqh", tags=["Fiqh Assistant"])
+@app.post("/api/fiqh/ask", tags=["Fiqh Assistant"])
+@app.post("/fiqh/ask", tags=["Fiqh Assistant"])
 async def ask_fiqh_advisor(payload: FiqhQuestionRequest):
     """
     Ask Sheikh AI: Interactive juristic advisor providing contextual guidance,
     madhhab nuances, and halal product alternatives.
     """
-    from backend.services.fiqh_chat import answer_fiqh_question
+    try:
+        from backend.services.fiqh_chat import answer_fiqh_question
+    except ModuleNotFoundError:
+        from services.fiqh_chat import answer_fiqh_question
+
     result = await answer_fiqh_question(
         question=payload.question,
         product_name=payload.product_name or "Food Item",
