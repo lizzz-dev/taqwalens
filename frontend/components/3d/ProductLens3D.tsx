@@ -22,7 +22,8 @@ export function ProductLens3D() {
     scene.background = null; // Transparent background to blend with warm card
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.4, width < 480 ? 6.0 : 5.2);
+    // Adjusted camera position to enlarge the carton ~25% within existing container boundary
+    camera.position.set(0, 0.22, width < 480 ? 4.8 : 4.15);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -41,10 +42,10 @@ export function ProductLens3D() {
     }
 
     // 2. Lighting (Warm Scandinavian Studio Lighting)
-    const ambientLight = new THREE.AmbientLight(0xfffdf5, 1.8);
+    const ambientLight = new THREE.AmbientLight(0xfffdf5, 2.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xfff8ee, 2.4);
+    const keyLight = new THREE.DirectionalLight(0xfff8ee, 2.5);
     keyLight.position.set(4, 5, 4);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
@@ -52,76 +53,132 @@ export function ProductLens3D() {
     keyLight.shadow.bias = -0.001;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xe8f0eb, 1.2);
+    const fillLight = new THREE.DirectionalLight(0xe8f0eb, 1.3);
     fillLight.position.set(-4, 2, -2);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xd4af37, 0.8);
+    const rimLight = new THREE.DirectionalLight(0xd4af37, 1.0);
     rimLight.position.set(0, -3, 3);
     scene.add(rimLight);
 
-    // 3. Create Canvas Texture for Food Packaging Label (Clean Nordic Aesthetic)
+    // 3. Create Canvas Texture for Food Packaging Label (Clean Nordic & Mindful Halal Aesthetic)
     const labelCanvas = document.createElement("canvas");
     labelCanvas.width = 1024;
     labelCanvas.height = 1024;
     const ctx = labelCanvas.getContext("2d");
     if (ctx) {
-      // Cream background
-      ctx.fillStyle = "#F7F4EE";
+      // Warm Natural Ivory Background
+      ctx.fillStyle = "#FAF7F0";
       ctx.fillRect(0, 0, 1024, 1024);
 
-      // Deep botanical sage band
+      // Deep Botanical Emerald Header Band
       ctx.fillStyle = "#1E3A2F";
-      ctx.fillRect(60, 60, 904, 180);
+      ctx.fillRect(50, 50, 924, 195);
 
-      // Brand Title
+      // Gold Trim Underneath Header
+      ctx.fillStyle = "#D4AF37";
+      ctx.fillRect(50, 245, 924, 6);
+
+      // Header Top Micro-Tag
+      ctx.fillStyle = "#A7F3D0";
+      ctx.font = "600 20px 'JetBrains Mono', monospace";
+      ctx.fillText("HALALAN TAYYIBAN • CERTIFIED AUDIT", 85, 95);
+
+      // Primary Brand Title
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 52px serif";
-      ctx.fillText("TAQWALENS", 100, 150);
-      ctx.font = "300 24px sans-serif";
-      ctx.fillText("MINDFUL BOTANICAL OATS", 100, 195);
+      ctx.font = "bold 58px 'Playfair Display', serif";
+      ctx.fillText("TAQWALENS", 85, 160);
 
-      // Front illustration / graphic
-      ctx.fillStyle = "#2D5A46";
+      // Sub-brand
+      ctx.fillStyle = "#EAE6DF";
+      ctx.font = "500 24px 'Inter', sans-serif";
+      ctx.fillText("BOTANICAL OATS & GRAINS", 85, 205);
+
+      // Calligraphy badge in header
+      ctx.fillStyle = "#D4AF37";
+      ctx.font = "bold 46px 'Amiri', serif";
+      ctx.fillText("حلال", 860, 165);
+
+      // Center Graphic: Emerald & Gold Halal Emblem
+      ctx.strokeStyle = "#D4AF37";
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(512, 420, 110, 0, Math.PI * 2);
+      ctx.arc(512, 395, 105, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#1E3A2F";
+      ctx.beginPath();
+      ctx.arc(512, 395, 98, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#F7F4EE";
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(512, 420, 95, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(512, 395, 88, 0, Math.PI * 2);
+      ctx.stroke();
 
-      // Leaf icon
-      ctx.fillStyle = "#2D5A46";
-      ctx.beginPath();
-      ctx.ellipse(512, 420, 45, 70, Math.PI / 6, 0, Math.PI * 2);
-      ctx.fill();
+      // Arabic Calligraphy in Center Emblem
+      ctx.fillStyle = "#FDF8EC";
+      ctx.textAlign = "center";
+      ctx.font = "bold 64px 'Amiri', serif";
+      ctx.fillText("حلال", 512, 385);
+
+      ctx.fillStyle = "#D4AF37";
+      ctx.font = "bold 18px 'Inter', sans-serif";
+      ctx.fillText("100% VERIFIED", 512, 435);
+      ctx.textAlign = "left"; // reset
 
       // Nutrition & Ingredient Panel
       ctx.fillStyle = "#1C1917";
-      ctx.font = "bold 26px sans-serif";
-      ctx.fillText("INGREDIENTS / INGRÉDIENTS", 100, 620);
+      ctx.font = "bold 28px 'Playfair Display', serif";
+      ctx.fillText("AUDITED INGREDIENTS / INGRÉDIENTS", 85, 570);
+
+      ctx.fillStyle = "#1E3A2F";
+      ctx.font = "600 17px 'JetBrains Mono', monospace";
+      ctx.fillText("[JAKIM MS 1500 & IFANCA SCREENED]", 640, 568);
 
       ctx.fillStyle = "#44403C";
-      ctx.font = "20px sans-serif";
-      ctx.fillText("Organic Rolled Oats, Mountain Spring Water,", 100, 665);
-      ctx.fillText("Cold-Pressed Sunflower Oil, Sea Salt,", 100, 705);
-      ctx.fillText("Calcium Carbonate (E170), Riboflavin (E101).", 100, 745);
+      ctx.font = "500 22px 'Inter', sans-serif";
+      ctx.fillText("Organic Whole Rolled Oats, Mountain Spring Water,", 85, 620);
+      ctx.fillText("Cold-Pressed Sunflower Seed Oil, Ancient Sea Salt,", 85, 665);
 
-      // Halal Seal Badge
       ctx.fillStyle = "#1E3A2F";
-      ctx.fillRect(100, 810, 360, 70);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 24px sans-serif";
-      ctx.fillText("✓ 100% PLANT VERIFIED", 130, 855);
+      ctx.font = "bold 22px 'Inter', sans-serif";
+      ctx.fillText("Plant Calcium Carbonate (E170), Riboflavin (E101).", 85, 710);
 
-      // Barcode
+      // Purity Guarantee Note
+      ctx.fillStyle = "#059669";
+      ctx.font = "600 20px 'Inter', sans-serif";
+      ctx.fillText("✓ Zero Porcine Derivatives • Zero Synthetic Alcohols", 85, 755);
+
+      // Bottom Badges Section
+      // Left Status Pill
+      ctx.fillStyle = "#1E3A2F";
+      ctx.beginPath();
+      ctx.roundRect(85, 810, 420, 80, 16);
+      ctx.fill();
+
+      ctx.strokeStyle = "#D4AF37";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = "#FDF8EC";
+      ctx.font = "bold 25px 'Inter', sans-serif";
+      ctx.fillText("✓ 100% HALAL CERTIFIED", 115, 848);
+
+      ctx.fillStyle = "#A7F3D0";
+      ctx.font = "500 16px 'JetBrains Mono', monospace";
+      ctx.fillText("Multi-Madhhab Sourcing Transparency", 115, 874);
+
+      // Right Side: Barcode
       ctx.fillStyle = "#1C1917";
-      for (let i = 0; i < 48; i++) {
-        const barWidth = i % 3 === 0 ? 6 : 3;
-        ctx.fillRect(580 + i * 7, 810, barWidth, 70);
+      for (let i = 0; i < 46; i++) {
+        const barWidth = i % 4 === 0 ? 7 : i % 2 === 0 ? 4 : 2.5;
+        ctx.fillRect(570 + i * 8, 805, barWidth, 68);
       }
+      ctx.fillStyle = "#57534E";
+      ctx.font = "500 17px 'JetBrains Mono', monospace";
+      ctx.fillText("8  901234  567890", 630, 892);
     }
 
     const labelTexture = new THREE.CanvasTexture(labelCanvas);
@@ -138,14 +195,14 @@ export function ProductLens3D() {
 
     const cartonGeo = new THREE.BoxGeometry(cartonWidth, cartonHeight, cartonDepth);
     const cartonMatSide = new THREE.MeshStandardMaterial({
-      color: 0xf4f0e6,
-      roughness: 0.6,
-      metalness: 0.05,
+      color: 0xfaf7f0,
+      roughness: 0.55,
+      metalness: 0.04,
     });
     const cartonMatFront = new THREE.MeshStandardMaterial({
       map: labelTexture,
-      roughness: 0.5,
-      metalness: 0.05,
+      roughness: 0.45,
+      metalness: 0.04,
     });
 
     const materials = [
@@ -166,9 +223,9 @@ export function ProductLens3D() {
     // Carton Gable/Roof Top (Angled juice/milk style top fold)
     const roofGeo = new THREE.ConeGeometry(cartonWidth * 0.72, 0.45, 4);
     const roofMat = new THREE.MeshStandardMaterial({
-      color: 0x1e3a2f,
-      roughness: 0.4,
-      metalness: 0.1,
+      color: 0x143024,
+      roughness: 0.35,
+      metalness: 0.15,
     });
     const roof = new THREE.Mesh(roofGeo, roofMat);
     roof.rotation.y = Math.PI / 4;
@@ -182,9 +239,9 @@ export function ProductLens3D() {
     // Metallic Brass Ring Frame
     const ringGeo = new THREE.TorusGeometry(0.55, 0.045, 24, 64);
     const brassMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      roughness: 0.25,
-      metalness: 0.85,
+      color: 0xe5bf4c,
+      roughness: 0.18,
+      metalness: 0.9,
     });
     const lensRing = new THREE.Mesh(ringGeo, brassMat);
     lensGroup.add(lensRing);
@@ -193,8 +250,8 @@ export function ProductLens3D() {
     const glassGeo = new THREE.CylinderGeometry(0.54, 0.54, 0.02, 48);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      transmission: 0.9,
-      opacity: 0.85,
+      transmission: 0.92,
+      opacity: 0.88,
       transparent: true,
       roughness: 0.1,
       ior: 1.52,
@@ -208,8 +265,8 @@ export function ProductLens3D() {
     // Lens Handle
     const handleGeo = new THREE.CylinderGeometry(0.04, 0.045, 0.6, 24);
     const handleMat = new THREE.MeshStandardMaterial({
-      color: 0x1e3a2f,
-      roughness: 0.35,
+      color: 0x143024,
+      roughness: 0.3,
       metalness: 0.2,
     });
     const handle = new THREE.Mesh(handleGeo, handleMat);
@@ -298,7 +355,8 @@ export function ProductLens3D() {
         const { width: newW, height: newH } = entry.contentRect;
         if (newW > 0 && newH > 0) {
           camera.aspect = newW / newH;
-          camera.position.z = newW < 480 ? 6.0 : 5.2;
+          camera.position.z = newW < 480 ? 4.8 : 4.15;
+          camera.position.y = 0.22;
           camera.updateProjectionMatrix();
           renderer.setSize(newW, newH);
         }
