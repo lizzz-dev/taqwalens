@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import Link from "next/link";
 import {
   Search,
   Clock,
@@ -12,7 +11,6 @@ import {
   Volume2,
   VolumeX,
   ChevronDown,
-  Tv,
 } from "lucide-react";
 import { MadhhabProfile, UserProfile } from "../lib/types";
 import { Logo3D } from "./3d/Logo3D";
@@ -189,17 +187,6 @@ export function Navbar({
                       <span>Recent History 🕒</span>
                     </button>
                   )}
-                  <Link
-                    href="/presentation"
-                    onClick={() => {
-                      setIsToolsOpen(false);
-                      soundManager.playClick();
-                    }}
-                    className="w-full px-3 py-2 text-left text-xs font-medium text-amber-800 bg-amber-50/70 hover:bg-amber-100/70 rounded-xl flex items-center gap-2.5 transition-colors mt-0.5"
-                  >
-                    <Tv className="w-4 h-4 text-amber-600" />
-                    <span className="font-semibold">Slide Deck (10 Slides) 📽️</span>
-                  </Link>
                 </div>
               )}
             </div>
