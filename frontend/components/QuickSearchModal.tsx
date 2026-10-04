@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, CheckCircle2, AlertTriangle, XCircle, Sparkles, BookOpen, ArrowRight } from "lucide-react";
 import { AdditiveDetail, VerdictStatus } from "../lib/types";
+import { getApiBaseUrl } from "../lib/api";
 
 interface QuickSearchModalProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export function QuickSearchModal({ isOpen, onClose }: QuickSearchModalProps) {
     setSearchError(null);
     setResult(null);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const API_BASE = getApiBaseUrl();
 
     try {
       const res = await fetch(`${API_BASE}/api/ecode/${encodeURIComponent(clean)}`);

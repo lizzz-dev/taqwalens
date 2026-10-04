@@ -1,6 +1,16 @@
 import { AuditResponse, MadhhabProfile } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL !== undefined) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "";
+  }
+  return "http://localhost:8000";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 /**

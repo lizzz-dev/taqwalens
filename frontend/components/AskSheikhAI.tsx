@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, Sparkles, BookOpen, Scale, ArrowRight, CornerDownLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { soundManager } from "../lib/soundEffects";
 import { MadhhabProfile } from "../lib/types";
+import { getApiBaseUrl } from "../lib/api";
 
 interface Message {
   id: string;
@@ -71,7 +72,7 @@ export function AskSheikhAI({
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = getApiBaseUrl();
       const res = await fetch(`${apiUrl}/api/ask-fiqh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
