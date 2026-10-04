@@ -67,7 +67,7 @@ To establish an uncompromised, zero-latency dietary integrity ecosystem that fus
                                                    ▼
                      ┌───────────────────────────────────────────────────────────┐
                      │             Human Consumer Review & Governance Gate       │
-                     │    [Review Findings] ──► [Select Madhhab] ──► [Take Action│
+                     │    [Review Findings] ──► [Select Madhhab] ──► [Take Action]   │
                      └─────────────────────────────┬─────────────────────────────┘
                                                    │
                      ┌─────────────────────────────┴─────────────────────────────┐
