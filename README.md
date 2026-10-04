@@ -11,7 +11,7 @@
 
 **An institutional, production-grade dietary transparency platform empowering mindful consumers to audit food packaging labels and retail barcodes against authoritative Islamic juristic standards.**
 
-🌐 **Live Deployment:** [https://taqwa-lens.vercel.app](https://taqwa-lens.vercel.app)
+🌐 **Live Deployment:** [https://taqwa-lens.vercel.app](https://taqwalens.vercel.app/#gateway)
 
 [Features](#-key-features) • [Architecture](#-architecture) • [3D Spatial Experience](#-3d-spatial-experience) • [Multi-Madhhab Engine](#-multi-madhhab-juristic-engine) • [Quick Start](#-quick-start) • [API Reference](#-api-reference)
 
