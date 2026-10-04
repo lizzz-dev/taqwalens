@@ -323,12 +323,15 @@ export function Compliance3DShowcase() {
 
     // 4. Smooth Animation Loop
     let animId: number;
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
+    let lastTime = performance.now();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      const elapsedTime = clock.getElapsedTime();
+      const now = performance.now();
+      const delta = Math.min((now - lastTime) * 0.001, 0.1);
+      lastTime = now;
+      const elapsedTime = (now - startTime) * 0.001;
 
       // Smooth pointer interpolation
       pointer.current.currentX += (pointer.current.targetX - pointer.current.currentX) * 0.07;

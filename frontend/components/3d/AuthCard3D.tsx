@@ -460,12 +460,12 @@ export function AuthCard3D({
     window.addEventListener("resize", handleResize);
 
     // 6. Animation Loop (60 FPS)
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
     setIsReady(true);
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) * 0.001;
 
       // Smoothly interpolate flip angle
       flipAngleRef.current += (targetFlipAngleRef.current - flipAngleRef.current) * 0.08;
