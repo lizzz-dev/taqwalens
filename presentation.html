@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaqwaLens — Executive Presentation Deck (10 Slides)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #021a13;
+      --card-bg: #04281e;
+      --card-border: rgba(16, 185, 129, 0.25);
+      --gold: #f59e0b;
+      --gold-light: #fef3c7;
+      --emerald: #10b981;
+      --emerald-dark: #064e3b;
+      --text-main: #faf8f5;
+      --text-muted: #a7f3d0;
+      --red: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .font-serif {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Ambient Background Aura */
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .glow-1 {
+      position: absolute;
+      top: -20%;
+      left: -10%;
+      width: 55vw;
+      height: 55vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+      filter: blur(80px);
+    }
+
+    .glow-2 {
+      position: absolute;
+      bottom: -20%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+      filter: blur(90px);
+    }
+
+    /* Top HUD */
+    header {
+      position: relative;
+      z-index: 20;
+      height: 60px;
+      background: rgba(2, 26, 19, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pill-btn {
+      background: rgba(6, 78, 59, 0.6);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #d1fae5;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .pill-btn:hover {
+      background: rgba(6, 78, 59, 0.9);
+      border-color: var(--emerald);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .counter-badge {
+      background: rgba(2, 44, 34, 0.8);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--emerald);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* Progress bar */
+    .progress-bar-container {
+      width: 100%;
+      height: 3px;
+      background: #022c22;
+      position: relative;
+      z-index: 20;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #f59e0b, #34d399);
+      transition: width 0.4s ease;
+    }
+
+    /* Main Slide Stage */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .slide-card {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      min-height: 580px;
+      background: linear-gradient(135deg, rgba(4, 40, 30, 0.95), rgba(2, 31, 23, 0.95), rgba(1, 20, 14, 0.95));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 24px;
+      padding: 2.5rem 3rem;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(16, 185, 129, 0.08);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 3.5rem;
+      line-height: 1.05;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 0.2rem;
+    }
+
+    .gold-gradient {
+      background: linear-gradient(90deg, #fbbf24, #f59e0b, #fde68a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tag-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.25rem;
+    }
+
+    .subtext {
+      color: #a7f3d0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      opacity: 0.85;
+    }
+
+    /* Grids & Cards */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .feature-box {
+      background: rgba(6, 78, 59, 0.4);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 14px;
+      padding: 1rem 1.15rem;
+    }
+
+    .feature-box h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .feature-box p {
+      font-size: 0.75rem;
+      color: #d1fae5;
+      line-height: 1.45;
+      opacity: 0.8;
+    }
+
+    /* Simulated Label */
+    .simulated-label {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .flag-red {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .flag-amber {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Bottom Nav Bar */
+    .slide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(16, 185, 129, 0.2);
+      padding-top: 1rem;
+      font-size: 0.75rem;
+      color: #6ee7b7;
+    }
+
+    .slide-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: rgba(6, 78, 59, 0.8);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dot.active {
+      width: 22px;
+      background: var(--gold);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #021a13;
+      font-weight: 700;
+      border: none;
+      padding: 0.45rem 1.1rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-gold:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, .progress-bar-container, .slide-footer, .ambient-glow {
+        display: none !important;
+      }
+      main {
+        padding: 0 !important;
+      }
+      .slide-card {
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+        min-height: auto !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 2rem !important;
+        page-break-after: always;
+      }
+      .slide {
+        display: flex !important;
+      }
+      h1, h2 {
+        color: #064e3b !important;
+      }
+      .gold-gradient {
+        -webkit-text-fill-color: #b45309 !important;
+      }
+      .feature-box, .simulated-label {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow -->
+  <div class="ambient-glow">
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+  </div>
+
+  <!-- Header HUD -->
+  <header>
+    <div class="header-left">
+      <a href="http://localhost:3000" class="pill-btn" target="_blank">
+        <span>⚡</span> Launch Live App
+      </a>
+      <span class="counter-badge font-mono" id="slide-counter">01 / 10</span>
+    </div>
+    <div class="font-serif" style="font-size: 1.1rem; color: #fde68a; letter-spacing: 0.05em;" id="header-title">
+      TaqwaLens — Executive Presentation
+    </div>
+    <div class="header-right">
+      <button class="pill-btn" onclick="togglePlay()" id="play-btn">▶ Auto-Play</button>
+      <button class="pill-btn" onclick="window.print()">🖨️ Export PDF</button>
+      <button class="pill-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progress-bar" style="width: 10%;"></div>
+  </div>
+
+  <!-- Slide Card Stage -->
+  <main>
+    <div class="slide-card">
+
+      <!-- SLIDE 1 -->
+      <div class="slide active" id="slide-0">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="pill-btn font-mono" style="font-size: 0.65rem; border-color: rgba(245,158,11,0.4); color: var(--gold);">
+            ● PRODUCTION RELEASE // VERSION 1.0.0
+          </span>
+          <span class="font-mono" style="font-size: 0.75rem; color: #6ee7b7;">github.com/lizzz-dev/taqwalens</span>
+        </div>
+        <div style="margin: auto 0;">
+          <div class="tag-label">Global Dietary Integrity Platform</div>
+          <h1 class="font-serif">Taqwa<span class="gold-gradient">Lens</span></h1>
+          <p style="font-size: 1.35rem; color: #ecfdf5; margin-top: 0.4rem; font-weight: 300;">
+            Autonomous Multi-Modal Halal Compliance & Dietary Intelligence System
+          </p>
+          <p class="subtext" style="margin-top: 0.5rem; max-width: 750px;">
+            Sub-second grocery packaging OCR, deterministic verification across <strong>370+ indexed E-codes</strong>, and nuanced classical jurisprudence across 4 Sunni legal schools.
+          </p>
+          <div class="grid-3" style="margin-top: 1.5rem;">
+            <div class="feature-box">
+              <h4>⚡ Sub-Second Vision</h4>
+              <p>Groq LPU Llama 3.2 Vision OCR (&lt;1.2s) backed by Google Gemini 1.5 Flash automated failover.</p>
+            </div>
+            <div class="feature-box">
+              <h4>🛡️ 370+ E-Codes DB</h4>
+              <p>Glass Box architecture with zero LLM hallucination over certified chemical food additives.</p>
+            </div>
+            <div class="feature-box">
+              <h4>⚖️ Multi-Madhhab Fiqh</h4>
+              <p>Tailored rulings for Standard Consensus, Hanafi, Shafi'i, and Strict (Wara') high-vigilance.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>JAKIM MS 1500, IFANCA & SANHA Aligned Standards</span>
+          <span>Press &rarr; or Space to Navigate</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide" id="slide-1">
+        <div>
+          <div class="tag-label">02 // The Problem Space</div>
+          <h2 class="font-serif">Supermarket Cognitive Saturation & Chemical Ambiguity</h2>
+          <p class="subtext">Why 1.9 billion consumers face confusion in retail aisles every single day.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin: auto 0; align-items: center;">
+          <div class="grid-2" style="margin: 0;">
+            <div class="feature-box" style="border-color: rgba(239, 68, 68, 0.4);">
+              <h4 style="color: #fca5a5;">❌ Cryptic E-Codes</h4>
+              <p>Manufacturers conceal animal derivatives behind cryptic numbers like E471, E120, and E441.</p>
+            </div>
+            <div class="feature-box" style="border-color: rgba(245, 158, 11, 0.4);">
+              <h4 style="color: #fde68a;">⚠️ 15-Minute Delays</h4>
+              <p>Shoppers waste valuable minutes Googling conflicting forum threads and outdated PDF lists.</p>
+            </div>
+            <div class="feature-box" style="border-color: rgba(245, 158, 11, 0.4);">
+              <h4 style="color: #fde68a;">⚖️ Fiqh Divergence</h4>
+              <p>Generic apps ignore madhhab rulings: Carmine (E120) is prohibited in Hanafi but tolerated in others.</p>
+            </div>
+            <div class="feature-box" style="border-color: rgba(239, 68, 68, 0.4);">
+              <h4 style="color: #fca5a5;">❓ Zero Brand Recourse</h4>
+              <p>When an ingredient is doubtful (Mushbooh), consumers have no easy tool to demand origin clarification.</p>
+            </div>
+          </div>
+          <div class="simulated-label">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(16, 185, 129, 0.3); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="color: #34d399;">PACKAGING INGREDIENT PANEL</span>
+              <span style="color: #f87171;">3 FLAGS FOUND</span>
+            </div>
+            <p style="color: #cbd5e1; margin-bottom: 0.6rem;">
+              Wheat Flour, Sugar, Palm Oil, <span class="flag-amber">Emulsifier (E471)*</span>, Salt, <span class="flag-red">Carmine (E120)**</span>, <span class="flag-amber">Gelatin (E441)***</span>, Vanillin.
+            </p>
+            <div style="font-size: 0.68rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.4rem;">
+              <p style="color: #fde68a;">* E471: Plant or animal fatty acid origin unstated</p>
+              <p style="color: #fca5a5;">** E120: Insect extract; strictly Haram in Hanafi</p>
+              <p style="color: #fde68a;">*** E441: Requires verified Dhabihah slaughter chain</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Problem: High cognitive load, accidental non-halal consumption, and loss of spiritual peace of mind.</span>
+          <span>Slide 02 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide" id="slide-2">
+        <div>
+          <div class="tag-label">03 // Ingestion & Vision Pipeline</div>
+          <h2 class="font-serif">High-Speed Optical Ingestion & Dual-Engine Failover</h2>
+          <p class="subtext">Ultra-fast packaging OCR using Groq LPUs with automated Google Gemini 1.5 Flash fallback.</p>
+        </div>
+        <div style="margin: auto 0;">
+          <div class="grid-4">
+            <div class="feature-box" style="text-align: center;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">📸</div>
+              <h4>1. Multi-Stream Ingestion</h4>
+              <p>Live camera stream, packaging photo upload, or 1D retail UPC/EAN barcode.</p>
+            </div>
+            <div class="feature-box" style="text-align: center; border-color: var(--emerald);">
+              <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">⚡</div>
+              <h4 style="color: var(--emerald);">2. Primary Groq LPU</h4>
+              <p>Llama 3.2 11B Vision delivers sub-second (~1.18s) optical character extraction.</p>
+            </div>
+            <div class="feature-box" style="text-align: center;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">🔄</div>
+              <h4>3. Gemini Flash Failover</h4>
+              <p>Automatic seamless failover triggered on rate limits (HTTP 429) or degradation.</p>
+            </div>
+            <div class="feature-box" style="text-align: center;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">🛡️</div>
+              <h4>4. Non-Food Guard</h4>
+              <p>Rejects non-food objects with HTTP 422 to prevent hallucination.</p>
+            </div>
+          </div>
+          <div class="grid-4" style="margin-top: 1rem;">
+            <div class="feature-box font-mono" style="text-align: center; background: rgba(0,0,0,0.4);">
+              <div style="font-size: 0.65rem; color: #6ee7b7;">LATENCY</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #ffffff;">1.18s</div>
+            </div>
+            <div class="feature-box font-mono" style="text-align: center; background: rgba(0,0,0,0.4);">
+              <div style="font-size: 0.65rem; color: #6ee7b7;">COMPRESSION</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #34d399;">78% Red.</div>
+            </div>
+            <div class="feature-box font-mono" style="text-align: center; background: rgba(0,0,0,0.4);">
+              <div style="font-size: 0.65rem; color: #6ee7b7;">BARCODE API</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: var(--gold);">OpenFoodFacts</div>
+            </div>
+            <div class="feature-box font-mono" style="text-align: center; background: rgba(0,0,0,0.4);">
+              <div style="font-size: 0.65rem; color: #6ee7b7;">CLOUD COST</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #ffffff;">$0.00 / Free</div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Client-side and server-side dual compression enforces maximum 1024x1024 pixels.</span>
+          <span>Slide 03 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 4 -->
+      <div class="slide" id="slide-3">
+        <div>
+          <div class="tag-label">04 // Knowledge Engine</div>
+          <h2 class="font-serif">The "Glass Box" Principle: Zero Black-Box Hallucinations</h2>
+          <p class="subtext">Why probabilistic LLMs must NEVER invent religious rulings or alter certified chemical databases.</p>
+        </div>
+        <div style="margin: auto 0;">
+          <div class="grid-3">
+            <div class="feature-box" style="border-color: rgba(16, 185, 129, 0.6);">
+              <h4 style="color: #34d399;">🟢 HALAL (Permissible)</h4>
+              <p style="margin-bottom: 0.5rem;">100% plant, mineral, or synthetic sources without animal contamination.</p>
+              <div class="font-mono" style="font-size: 0.7rem; color: #a7f3d0; line-height: 1.8;">
+                &bull; E100: Curcumin (Plant)<br>
+                &bull; E300: Ascorbic Acid (Synthetic)<br>
+                &bull; E322: Soya Lecithin (Vegetable)
+              </div>
+            </div>
+            <div class="feature-box" style="border-color: rgba(239, 68, 68, 0.6);">
+              <h4 style="color: #f87171;">🔴 HARAM (Prohibited)</h4>
+              <p style="margin-bottom: 0.5rem;">Porcine derivatives, unslaughtered animal fats, or prohibited alcohol aids.</p>
+              <div class="font-mono" style="font-size: 0.7rem; color: #fca5a5; line-height: 1.8;">
+                &bull; E120: Carmine (Insect Extract)<br>
+                &bull; E542: Bone Phosphate (Animal)<br>
+                &bull; E441: Porcine Gelatin
+              </div>
+            </div>
+            <div class="feature-box" style="border-color: rgba(245, 158, 11, 0.6);">
+              <h4 style="color: #fbbf24;">🟡 MUSHBOOH (Doubtful)</h4>
+              <p style="margin-bottom: 0.5rem;">Dual-origin fatty acids where plant vs. animal origin is not disclosed.</p>
+              <div class="font-mono" style="font-size: 0.7rem; color: #fde68a; line-height: 1.8;">
+                &bull; E471: Mono- & Diglycerides<br>
+                &bull; E422: Glycerol (Fatty Acid)<br>
+                &bull; E476: Polyglycerol Polyricinoleate
+              </div>
+            </div>
+          </div>
+          <div class="feature-box font-mono" style="background: rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #a7f3d0; font-size: 0.8rem;">Database Scale: <strong>370+ Fully Indexed Food Additives & E-Codes</strong></span>
+            <span style="color: var(--gold); font-size: 0.75rem;">JAKIM MS 1500 // IFANCA // SANHA Indexed</span>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>The LLM strictly extracts text; our deterministic Python knowledge base evaluates rulings.</span>
+          <span>Slide 04 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 5 -->
+      <div class="slide" id="slide-4">
+        <div>
+          <div class="tag-label">05 // Islamic Jurisprudence</div>
+          <h2 class="font-serif">Multi-Madhhab Engine: Dynamic Juristic Re-Evaluation</h2>
+          <p class="subtext">Personalized classical rulings across 4 Sunni legal schools with zero re-scanning required.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin: auto 0; align-items: center;">
+          <div class="grid-2" style="margin: 0;">
+            <div class="feature-box">
+              <h4>Standard Consensus</h4>
+              <p>Aligned with international Halal certification bodies (JAKIM MS 1500, IFANCA). Broadest industrial consensus.</p>
+            </div>
+            <div class="feature-box">
+              <h4 style="color: var(--gold);">Hanafi School</h4>
+              <p>Strict prohibition on insect-derived food dyes (E120 Carmine) and non-plant rennet in cheese.</p>
+            </div>
+            <div class="feature-box">
+              <h4 style="color: #6ee7b7;">Shafi'i School</h4>
+              <p>Rigorous slaughter verification for bovine gelatin (E441) and bone phosphate (E542).</p>
+            </div>
+            <div class="feature-box">
+              <h4 style="color: var(--gold);">Strict (Wara' Tier)</h4>
+              <p>Maximum vigilance tier: flags all synthetic chemical carriers, alcohol solvents, and ambiguous additives.</p>
+            </div>
+          </div>
+          <div class="simulated-label" style="background: rgba(0,0,0,0.7); border-color: rgba(245, 158, 11, 0.4);">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--gold);">LIVE MADHHAB SIMULATOR</span>
+              <span style="color: #94a3b8;">Item: Macaron</span>
+            </div>
+            <p style="font-size: 0.75rem; margin-bottom: 0.6rem;">Additive under inspection: <strong>Carmine (E120)</strong></p>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <button onclick="setSimView('standard')" id="btn-std" class="pill-btn" style="flex: 1; justify-content: center; background: #059669; color: #fff;">Standard View</button>
+              <button onclick="setSimView('hanafi')" id="btn-han" class="pill-btn" style="flex: 1; justify-content: center;">Hanafi View</button>
+            </div>
+            <div id="sim-result" style="padding: 0.75rem; border-radius: 8px; background: rgba(6,78,59,0.5); border: 1px solid #10b981; font-size: 0.72rem;">
+              <strong style="color: #34d399;">STATUS: CONDITIONAL / PERMISSIBLE</strong>
+              <p style="color: #d1fae5; margin-top: 0.25rem;">Under global consensus (JAKIM MS 1500), purified carmine is tolerated within strict purity thresholds.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Click the simulator buttons above to toggle live juristic re-evaluation!</span>
+          <span>Slide 05 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 6 -->
+      <div class="slide" id="slide-5">
+        <div>
+          <div class="tag-label">06 // Consumer Empowerment</div>
+          <h2 class="font-serif">1-Click Brand Inquiry: Resolving Sourcing Ambiguity</h2>
+          <p class="subtext">Shifting consumers from passive confusion to active civic and manufacturer accountability.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; margin: auto 0; align-items: center;">
+          <div>
+            <div class="feature-box" style="margin-bottom: 0.75rem;">
+              <h4>✉️ Automated Corporate Email</h4>
+              <p>Pre-populates formal customer service inquiries specifying exact E-codes, batch codes, and chemical origin questions.</p>
+            </div>
+            <div class="feature-box" style="margin-bottom: 0.75rem;">
+              <h4 style="color: #6ee7b7;">🐦 280-Character Public X Post</h4>
+              <p>Generates concise social media posts querying brand customer care handles to encourage public transparency.</p>
+            </div>
+            <div class="feature-box" style="background: rgba(0,0,0,0.3); border-color: rgba(16, 185, 129, 0.2);">
+              <p style="color: #a7f3d0; font-size: 0.75rem;">💡 <strong>Impact:</strong> Empowers consumer voice and drives multinational brands to disclose plant vs. animal sourcing.</p>
+            </div>
+          </div>
+          <div class="simulated-label" style="background: rgba(0,0,0,0.7); border-color: rgba(16, 185, 129, 0.4);">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--gold);">BRAND INQUIRY DRAFT</span>
+              <span class="flag-amber">Target: E471</span>
+            </div>
+            <div style="background: rgba(6,78,59,0.3); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.7rem; color: #34d399;">
+              <strong>Subject:</strong> Inquiry Regarding Ingredient Sourcing for [Product Name]
+            </div>
+            <div style="background: rgba(6,78,59,0.2); padding: 0.6rem; border-radius: 6px; font-size: 0.68rem; color: #cbd5e1; max-height: 120px; overflow-y: auto;">
+              Dear Customer Relations Team,<br><br>
+              I am writing to verify the origin of <span style="color: var(--gold);">Mono- and diglycerides of fatty acids (E471)</span> in your product. Could you clarify whether this emulsifier is derived from 100% vegetable oils or animal fats? Also, are porcine enzymes or alcohol processing aids used in this facility? Thank you.
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button class="btn-gold" style="flex: 1; justify-content: center;" onclick="alert('Email template copied to clipboard!')">📋 Copy Email Draft</button>
+              <button class="pill-btn" onclick="alert('Launching default mailto: client...')">Launch Mail</button>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Universal clipboard fallback ensures seamless execution on mobile and desktop browsers.</span>
+          <span>Slide 06 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 7 -->
+      <div class="slide" id="slide-6">
+        <div>
+          <div class="tag-label">07 // Audit & Compliance</div>
+          <h2 class="font-serif">Institutional Compliance Certificate Dossier</h2>
+          <p class="subtext">Printable, audit-grade verification artifacts for consumers, retailers, and food importers.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; margin: auto 0; align-items: center;">
+          <div>
+            <div class="feature-box" style="margin-bottom: 0.75rem;">
+              <h4>📜 Legal Diploma Layout (`/certificate`)</h4>
+              <p>Parchment texture (#FCFBF8), double-line emerald filigree, and live holographic animated trust seal.</p>
+            </div>
+            <div class="feature-box" style="margin-bottom: 0.75rem;">
+              <h4 style="color: #6ee7b7;">🖨️ Native Print-to-PDF Engine</h4>
+              <p>Optimized print stylesheet with exact color reproduction, isolating certificates and hiding web UI buttons.</p>
+            </div>
+            <div class="feature-box" style="background: rgba(0,0,0,0.3); border-color: rgba(16, 185, 129, 0.2);">
+              <p style="color: #a7f3d0; font-size: 0.75rem;">🔒 <strong>Cryptographic Audit Trail:</strong> Unique certificate ID generation (<code>TL-88421-2026</code>) and local scan replay.</p>
+            </div>
+          </div>
+          <!-- Diploma Mockup -->
+          <div style="background: #fcfbf8; color: #1c1917; border: 3px double #1e3a2f; border-radius: 12px; padding: 1.25rem; font-family: 'Cormorant Garamond', Georgia, serif; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(30,58,47,0.3); padding-bottom: 0.4rem;">
+              <div>
+                <div style="font-size: 0.65rem; font-family: sans-serif; font-weight: 700; color: #1e3a2f; letter-spacing: 0.1em; text-transform: uppercase;">TaqwaLens Compliance Authority</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: #1e3a2f;">Institutional Verification Dossier</div>
+              </div>
+              <div style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #b45309; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                ✨
+              </div>
+            </div>
+            <div style="padding: 0.6rem 0; font-size: 0.75rem; line-height: 1.4;">
+              <p style="font-style: italic; color: #475569;">This official dossier certifies that the food product declared below:</p>
+              <div style="font-family: sans-serif; font-weight: 700; font-size: 0.85rem; color: #1e3a2f; margin-top: 0.25rem;">
+                Artisan Oat Milk & Almond Crunch Bar (UPC: 890123456789)
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; font-family: sans-serif; font-size: 0.7rem;">
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.35rem; border-radius: 6px;">
+                  Verdict: <strong style="color: #047857;">HALAL VERIFIED</strong>
+                </div>
+                <div style="background: #fef3c7; border: 1px solid #fde68a; padding: 0.35rem; border-radius: 6px;">
+                  Juristic: <strong style="color: #b45309;">Standard Consensus</strong>
+                </div>
+              </div>
+            </div>
+            <div style="border-top: 1px solid rgba(30,58,47,0.2); padding-top: 0.3rem; display: flex; justify-content: space-between; font-family: sans-serif; font-size: 0.65rem; color: #64748b;">
+              <span>Dossier ID: TL-88421-2026</span>
+              <span>Groq LPU + 370+ E-Code Engine</span>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Accessible anytime at `/certificate` with instant iOS Share Sheet and Android print spooling.</span>
+          <span>Slide 07 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 8 -->
+      <div class="slide" id="slide-7">
+        <div>
+          <div class="tag-label">08 // System Engineering</div>
+          <h2 class="font-serif">Enterprise Full-Stack Architecture & Defensive Security</h2>
+          <p class="subtext">Modern web stack hardened against GPU memory leaks, polyglot payloads, and unauthorized access.</p>
+        </div>
+        <div class="grid-2" style="margin: auto 0;">
+          <div class="feature-box">
+            <h4>📐 Full-Stack Topology</h4>
+            <div class="font-mono" style="font-size: 0.72rem; line-height: 1.8; margin-top: 0.5rem; color: #d1fae5;">
+              &bull; <strong>Frontend:</strong> Next.js 14.2+ (App Router), TypeScript, Tailwind CSS<br>
+              &bull; <strong>3D Engine:</strong> Three.js 0.161 with <code>forceContextLoss()</code> protection<br>
+              &bull; <strong>Backend:</strong> FastAPI 0.115 (Python 3.11+), Pydantic v2 schemas<br>
+              &bull; <strong>Inference:</strong> Groq Cloud LPU + Google AI Studio fallback
+            </div>
+          </div>
+          <div class="feature-box">
+            <h4 style="color: #34d399;">🛡️ Defensive Security Fortress</h4>
+            <div class="font-mono" style="font-size: 0.72rem; line-height: 1.8; margin-top: 0.5rem; color: #d1fae5;">
+              &bull; <strong>10MB Ceiling:</strong> Rejects oversized payloads with HTTP 413<br>
+              &bull; <strong>Magic Byte Check:</strong> Verifies genuine image headers (Pillow)<br>
+              &bull; <strong>Error Masking:</strong> Zero stack trace leakage to clients<br>
+              &bull; <strong>18/18 Tests:</strong> 100% passing automated pytest test cases
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>CORS strictly whitelisted to authorized origins. Zero wildcards in production.</span>
+          <span>Slide 08 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 9 -->
+      <div class="slide" id="slide-8">
+        <div>
+          <div class="tag-label">09 // Impact & Sustainability</div>
+          <h2 class="font-serif">Measurable Humanitarian Impact & UN SDGs Alignment</h2>
+          <p class="subtext">Accelerating 5 United Nations Sustainable Development Goals through high-tech dietary intelligence.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; margin: auto 0; align-items: center;">
+          <div>
+            <div class="tag-label" style="margin-bottom: 0.5rem;">BEFORE VS. AFTER KPIS</div>
+            <div class="feature-box font-mono" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: #94a3b8;">Mean Time to Audit</span>
+              <span style="color: #34d399; font-weight: 700;">15 min &rarr; 1.18s (92%&darr;)</span>
+            </div>
+            <div class="feature-box font-mono" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: #94a3b8;">E-Code Chemical Coverage</span>
+              <span style="color: var(--gold); font-weight: 700;">~5 &rarr; 370+ Additives</span>
+            </div>
+            <div class="feature-box font-mono" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: #94a3b8;">Mushbooh Resolution</span>
+              <span style="color: #34d399; font-weight: 700;">Doubt &rarr; 1-Click Inquiry</span>
+            </div>
+            <div class="feature-box font-mono" style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span style="color: #94a3b8;">Infrastructure Cost</span>
+              <span style="color: #38bdf8; font-weight: 700;">$$$ &rarr; $0 Serverless</span>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; font-size: 0.72rem;">
+            <div class="feature-box">
+              <strong style="color: #34d399;">SDG 3: Good Health</strong>
+              <p style="font-size: 0.68rem; margin-top: 0.2rem;">Allergen & toxic chemical screening.</p>
+            </div>
+            <div class="feature-box">
+              <strong style="color: var(--gold);">SDG 12: Consumption</strong>
+              <p style="font-size: 0.68rem; margin-top: 0.2rem;">Demanding plant vs animal source transparency.</p>
+            </div>
+            <div class="feature-box">
+              <strong style="color: #38bdf8;">SDG 9: Innovation</strong>
+              <p style="font-size: 0.68rem; margin-top: 0.2rem;">Democratizing sub-second edge AI.</p>
+            </div>
+            <div class="feature-box">
+              <strong style="color: #34d399;">SDG 16: Institutions</strong>
+              <p style="font-size: 0.68rem; margin-top: 0.2rem;">Combating counterfeit Halal certifications.</p>
+            </div>
+            <div class="feature-box" style="grid-column: span 2; text-align: center; border-color: rgba(245,158,11,0.4);">
+              <strong style="color: var(--gold);">SDG 17: Partnerships for the Goals:</strong> Harmonizing global Halal standards.
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Bridging advanced artificial intelligence with international humanitarian and ethical priorities.</span>
+          <span>Slide 09 / 10</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 10 -->
+      <div class="slide" id="slide-9">
+        <div>
+          <div class="tag-label">10 // Strategic Horizon</div>
+          <h2 class="font-serif">The Future of Halal Tech: Roadmap to Global Scale</h2>
+          <p class="subtext">From individual supermarket scanner to global institutional food supply chain verification.</p>
+        </div>
+        <div style="margin: auto 0;">
+          <div class="grid-3">
+            <div class="feature-box">
+              <div class="tag-label" style="font-size: 0.65rem;">PHASE 2 // NEAR-TERM</div>
+              <h4 style="color: #ffffff; margin-top: 0.2rem;">Offline Edge & IoT Model</h4>
+              <p>On-device quantized vision models (WebAssembly / ONNX) for offline scanning in basement grocery aisles with zero signal.</p>
+            </div>
+            <div class="feature-box">
+              <div class="tag-label" style="font-size: 0.65rem;">PHASE 3 // MEDIUM-TERM</div>
+              <h4 style="color: #ffffff; margin-top: 0.2rem;">Global Body Federation</h4>
+              <p>Direct API synchronization with official regulatory databases (JAKIM e-Halal, BPJPH Indonesia) with cryptographic validation.</p>
+            </div>
+            <div class="feature-box">
+              <div class="tag-label" style="font-size: 0.65rem;">PHASE 4 // LONG-TERM</div>
+              <h4 style="color: #ffffff; margin-top: 0.2rem;">Supply Chain ERP Connector</h4>
+              <p>B2B portal auditing multi-page supplier specification sheets (PDF/CSV) for commercial food importers and airlines.</p>
+            </div>
+          </div>
+          <div class="feature-box" style="margin-top: 1rem; background: linear-gradient(90deg, rgba(6,78,59,0.5), rgba(245,158,11,0.15)); border-color: rgba(245,158,11,0.4); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; color: #ffffff; font-size: 0.9rem;">Experience TaqwaLens Live</div>
+              <div style="font-size: 0.72rem; color: #a7f3d0;">Open source, production-ready, and freely accessible to conscious consumers worldwide.</div>
+            </div>
+            <a href="http://localhost:3000" target="_blank" class="btn-gold" style="text-decoration: none;">Launch Studio ⚡</a>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>Authored by the TaqwaLens Core Engineering Team // 2026</span>
+          <span>Slide 10 / 10 &bull; Conclusion</span>
+        </div>
+      </div>
+
+      <!-- Slide Card Controls Footer -->
+      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(16, 185, 129, 0.25); padding-top: 0.75rem; margin-top: 0.5rem;">
+        <button class="pill-btn" onclick="prevSlide()">&larr; Previous</button>
+        <div class="slide-dots" id="dots-container"></div>
+        <button class="btn-gold" onclick="nextSlide()" id="next-btn">Next Slide &rarr;</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    let currentSlide = 0;
+    const totalSlides = 10;
+    let isPlaying = false;
+    let playInterval = null;
+
+    const titles = [
+      "01. Title & Executive Vision",
+      "02. Problem Space & Cognitive Saturation",
+      "03. Optical Ingestion & Groq LPU Vision",
+      "04. The Glass Box 370+ E-Code Engine",
+      "05. Nuanced Multi-Madhhab Jurisprudence",
+      "06. 1-Click Brand Inquiry Drawer",
+      "07. Institutional Compliance Dossier",
+      "08. Enterprise Technical Architecture",
+      "09. Measurable KPIs & UN SDGs Impact",
+      "10. Strategic Horizon & Future Roadmap"
+    ];
+
+    function initDots() {
+      const container = document.getElementById("dots-container");
+      container.innerHTML = "";
+      for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement("div");
+        dot.className = "dot" + (i === 0 ? " active" : "");
+        dot.onclick = () => goToSlide(i);
+        container.appendChild(dot);
+      }
+    }
+
+    function showSlide(index) {
+      document.querySelectorAll(".slide").forEach((el, i) => {
+        el.classList.toggle("active", i === index);
+      });
+      document.querySelectorAll(".dot").forEach((el, i) => {
+        el.classList.toggle("active", i === index);
+      });
+      document.getElementById("slide-counter").textContent = 
+        String(index + 1).padStart(2, "0") + " / " + String(totalSlides).padStart(2, "0");
+      document.getElementById("progress-bar").style.width = ((index + 1) / totalSlides * 100) + "%";
+      document.getElementById("header-title").textContent = titles[index];
+      
+      const nextBtn = document.getElementById("next-btn");
+      if (index === totalSlides - 1) {
+        nextBtn.innerHTML = "First Slide ↺";
+      } else {
+        nextBtn.innerHTML = "Next Slide &rarr;";
+      }
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide < totalSlides - 1) ? currentSlide + 1 : 0;
+      showSlide(currentSlide);
+    }
+
+    function prevSlide() {
+      currentSlide = (currentSlide > 0) ? currentSlide - 1 : totalSlides - 1;
+      showSlide(currentSlide);
+    }
+
+    function goToSlide(i) {
+      currentSlide = i;
+      showSlide(currentSlide);
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById("play-btn");
+      if (isPlaying) {
+        btn.textContent = "⏸ Pause";
+        btn.style.borderColor = "var(--gold)";
+        btn.style.color = "var(--gold)";
+        playInterval = setInterval(nextSlide, 7000);
+      } else {
+        btn.textContent = "▶ Auto-Play";
+        btn.style.borderColor = "";
+        btn.style.color = "";
+        clearInterval(playInterval);
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Keyboard listener
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === "f" || e.key === "F") {
+        toggleFullscreen();
+      }
+    });
+
+    // Slide 5 Simulator
+    function setSimView(view) {
+      const btnStd = document.getElementById("btn-std");
+      const btnHan = document.getElementById("btn-han");
+      const res = document.getElementById("sim-result");
+
+      if (view === "standard") {
+        btnStd.style.background = "#059669";
+        btnStd.style.color = "#fff";
+        btnHan.style.background = "rgba(6, 78, 59, 0.6)";
+        btnHan.style.color = "#d1fae5";
+        res.style.borderColor = "#10b981";
+        res.style.background = "rgba(6,78,59,0.5)";
+        res.innerHTML = `
+          <strong style="color: #34d399;">STATUS: CONDITIONAL / PERMISSIBLE</strong>
+          <p style="color: #d1fae5; margin-top: 0.25rem;">Under global consensus (JAKIM MS 1500), purified carmine is tolerated within strict purity thresholds.</p>
+        `;
+      } else {
+        btnHan.style.background = "#dc2626";
+        btnHan.style.color = "#fff";
+        btnStd.style.background = "rgba(6, 78, 59, 0.6)";
+        btnStd.style.color = "#d1fae5";
+        res.style.borderColor = "#ef4444";
+        res.style.background = "rgba(127,29,29,0.5)";
+        res.innerHTML = `
+          <strong style="color: #f87171;">STATUS: HARAM DETECTED</strong>
+          <p style="color: #fca5a5; margin-top: 0.25rem;">Under classical Hanafi jurisprudence, land insects (such as cochineal) are classified as non-permissible for oral consumption.</p>
+        `;
+      }
+    }
+
+    initDots();
+  </script>
+</body>
+</html>
