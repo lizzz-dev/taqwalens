@@ -7,7 +7,7 @@
 - **Target Organization:** Global Halal Certification Authorities (JAKIM, IFANCA, SANHA, BPJPH), Food Standards & Import Regulators, Retail Food Consortia, Conscious Muslim Consumers Worldwide
 - **Document Status:** Final / Approved
 - **Repository:** [https://github.com/lizzz-dev/taqwalens](https://github.com/lizzz-dev/taqwalens)
-- **Live Deployment:** [https://taqwalens.vercel.app](https://taqwalens.vercel.app)
+- **Live Deployment:** [https://taqwa-lens.vercel.app](https://taqwa-lens.vercel.app)
 
 ---
 
