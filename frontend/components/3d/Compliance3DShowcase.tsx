@@ -454,8 +454,8 @@ export function Compliance3DShowcase() {
         </div>
 
         {/* Right 3D Interactive Viewport Stage */}
-        <div className="lg:col-span-7 w-full h-[270px] sm:h-[310px] rounded-xl relative cursor-grab active:cursor-grabbing touch-none flex items-center justify-center">
-          <div ref={containerRef} className="w-full h-full" />
+        <div className="lg:col-span-7 w-full h-[270px] sm:h-[310px] rounded-xl relative cursor-grab active:cursor-grabbing touch-pan-y flex items-center justify-center">
+          <div ref={containerRef} className="w-full h-full touch-pan-y" />
 
           {/* Interactive Hint / Status Badge */}
           <div className="absolute bottom-2 right-2 text-[10px] font-mono text-[#78716C] bg-white/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-[#EAE6DF] shadow-2xs pointer-events-none flex items-center gap-1.5">

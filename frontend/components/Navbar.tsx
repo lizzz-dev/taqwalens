@@ -92,7 +92,7 @@ export function Navbar({
         </div>
 
         {/* Right-Side Cluster: Single Horizontal Row */}
-        <div className="flex items-center gap-3 shrink-0 flex-nowrap">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 flex-nowrap">
           {/* 1. Instant E-Code Search Button */}
           {onOpenSearch && (
             <button
@@ -100,12 +100,11 @@ export function Navbar({
                 soundManager.playClick();
                 onOpenSearch();
               }}
-              className="h-9 px-3.5 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs text-xs text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 flex items-center gap-2 shrink-0"
+              className="h-9 w-9 sm:w-auto px-0 sm:px-3.5 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs text-xs text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"
               title="Search certified E-numbers and ingredients (⌘K)"
             >
               <Search className="w-3.5 h-3.5 text-[#1E3A2F]" />
               <span className="font-medium hidden sm:inline">Search Additives...</span>
-              <span className="font-medium sm:hidden">Search</span>
               <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-slate-50 border border-slate-200/80 rounded text-slate-400">
                 ⌘K
               </kbd>
@@ -114,7 +113,7 @@ export function Navbar({
 
           {/* 2. Madhhab Juristic Profile Selector */}
           {onChangeMadhhab && (
-            <div className="h-9 px-3 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs flex items-center gap-1.5 text-xs shrink-0">
+            <div className="h-9 px-2.5 sm:px-3 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs flex items-center gap-1.5 text-xs shrink-0">
               <Scale className="w-3.5 h-3.5 text-[#1E3A2F] shrink-0" />
               <label htmlFor="madhhab-select" className="text-[11px] text-slate-500 font-medium hidden md:inline">
                 Fiqh:
@@ -126,7 +125,7 @@ export function Navbar({
                   soundManager.playClick();
                   onChangeMadhhab(e.target.value as MadhhabProfile);
                 }}
-                className="bg-transparent text-xs font-semibold text-slate-900 focus:outline-none cursor-pointer pr-1"
+                className="bg-transparent text-xs font-semibold text-slate-900 focus:outline-none cursor-pointer pr-0.5 sm:pr-1"
                 title="Select juristic school of thought for additive rulings"
               >
                 <option value="standard">Standard</option>
@@ -145,7 +144,7 @@ export function Navbar({
                   soundManager.playClick();
                   setIsToolsOpen((prev) => !prev);
                 }}
-                className={`h-9 px-3 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 ${
+                className={`h-9 px-2.5 sm:px-3 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 ${
                   isToolsOpen ? "border-[#1E3A2F] bg-white ring-1 ring-[#1E3A2F]/20" : ""
                 }`}
                 title="Tools: History & Product Comparison"
@@ -213,7 +212,7 @@ export function Navbar({
                 soundManager.playClick();
                 onOpenAuthGateway();
               }}
-              className="h-9 px-4 rounded-full text-xs font-medium flex items-center gap-2 bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs hover:border-[#1E3A2F] text-slate-900 shrink-0 transition-all active:scale-95"
+              className="h-9 px-2 sm:px-4 rounded-full text-xs font-medium flex items-center gap-2 bg-white/80 backdrop-blur-md border border-slate-200/70 shadow-xs hover:border-[#1E3A2F] text-slate-900 shrink-0 transition-all active:scale-95"
               title="Click to view 3D Auditor Credential, switch profile, or sign out"
             >
               <div className="w-5 h-5 rounded-full bg-[#1E3A2F] text-[#D4AF37] font-serif text-[10px] font-bold flex items-center justify-center shrink-0">
@@ -222,7 +221,7 @@ export function Navbar({
               <span className="font-semibold text-xs whitespace-nowrap hidden sm:inline">
                 {currentUser?.name || "Guest Evaluator"}
               </span>
-              <LogOut className="w-3 h-3 text-slate-400 ml-0.5 shrink-0" />
+              <LogOut className="w-3 h-3 text-slate-400 ml-0.5 shrink-0 hidden sm:inline" />
             </button>
           )}
         </div>
