@@ -37,6 +37,7 @@ import {
   Play,
   Pause,
   Home,
+  Download,
 } from "lucide-react";
 
 // ============================================================================
@@ -192,6 +193,16 @@ export default function PresentationPage() {
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
+
+          <a
+            href="/TaqwaLens_Presentation.pptx"
+            download="TaqwaLens_Presentation.pptx"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 hover:border-amber-400 transition-all active:scale-95"
+            title="Download Presentation as PowerPoint (.pptx)"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">.PPTX</span>
+          </a>
 
           <button
             onClick={handlePrint}
