@@ -151,6 +151,22 @@ export default function Home() {
     window.open("/certificate", "_blank");
   };
 
+  const handleResetToStart = () => {
+    soundManager.playClick();
+    setAuditResult(null);
+    setScannerPreviewUrl(null);
+    setSelectedPresetId(null);
+    setErrorMessage(null);
+    setIsHistoryOpen(false);
+    setIsCertificateOpen(false);
+    setIsSearchOpen(false);
+    setIsCompareOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (window.location.hash && window.location.hash !== "#studio") {
+      window.history.pushState({ screen: "studio" }, "", "#studio");
+    }
+  };
+
   // Load scan history from localStorage on client mount
   useEffect(() => {
     try {
@@ -561,6 +577,7 @@ export default function Home() {
         onChangeMadhhab={(m) => setSelectedMadhhab(m)}
         currentUser={currentUser}
         onOpenAuthGateway={handleOpenAuthGateway}
+        onResetToStart={handleResetToStart}
       />
 
       <main className="relative z-10 flex-1 w-full space-y-8 sm:space-y-12">

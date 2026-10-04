@@ -27,6 +27,7 @@ interface NavbarProps {
   onChangeMadhhab?: (m: MadhhabProfile) => void;
   currentUser?: UserProfile | null;
   onOpenAuthGateway?: () => void;
+  onResetToStart?: () => void;
 }
 
 export function Navbar({
@@ -38,6 +39,7 @@ export function Navbar({
   onChangeMadhhab,
   currentUser,
   onOpenAuthGateway,
+  onResetToStart,
 }: NavbarProps) {
   const [isSoundOn, setIsSoundOn] = useState(true);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -78,18 +80,30 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/70 bg-[#FAF8F5]/90 backdrop-blur-md transition-all">
       <div className="flex items-center justify-between h-16 px-6 max-w-7xl mx-auto w-full">
-        {/* Brand Logo & Editorial Title */}
-        <div className="flex items-center gap-3 shrink-0">
-          <Logo3D className="w-9 h-9 sm:w-10 sm:h-10 shrink-0" />
+        {/* Brand Logo & Editorial Title (Click to return to start) */}
+        <button
+          type="button"
+          onClick={() => {
+            soundManager.playClick();
+            if (onResetToStart) {
+              onResetToStart();
+            } else {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          className="flex items-center gap-3 shrink-0 group text-left cursor-pointer transition-transform active:scale-95 focus:outline-none"
+          title="Return to start"
+        >
+          <Logo3D className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 group-hover:scale-105 transition-transform" />
           <div className="flex flex-col justify-center">
-            <span className="font-serif font-bold text-xl sm:text-2xl tracking-[0.02em] text-slate-900 leading-none select-none">
+            <span className="font-serif font-bold text-xl sm:text-2xl tracking-[0.02em] text-slate-900 leading-none select-none group-hover:text-[#1E3A2F] transition-colors">
               TaqwaLens
             </span>
             <p className="text-[9px] sm:text-[10px] text-slate-500 tracking-[0.08em] uppercase font-medium mt-0.5 hidden xl:block">
               Mindful Food & Ingredient Auditor
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Right-Side Cluster: Single Horizontal Row */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 flex-nowrap">
